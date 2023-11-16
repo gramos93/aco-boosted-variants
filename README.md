@@ -1,7 +1,7 @@
 # An Ant Colony with Visibility Problem optimization approach for Multi-UAV based, search and rescue missions during forest wildfires.
 
 <p align="center">
-<img src="../radioactive-goose/assets/radioactive-goose-logo.jpg" alt="logo" width="300"/>
+<img src="https://github.com/gramos93/radioactive-goose/blob/main/assets/radioactive-goose-logo.jpg" alt="logo" width="300"/>
 </p>
 
 This repository is the official implementation of [An Ant Colony with Visibility Problem optimization approach for Multi-UAV based, search and rescue missions during forest wildfires.](https://arxiv.org/abs/2030.12345).
