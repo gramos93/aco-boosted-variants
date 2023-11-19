@@ -1,0 +1,78 @@
+@startuml
+
+class GridWorld {
+  grid: 2D Array
+  update()
+}
+
+class SearchPath {
+  path: List<SearchNode>
+  add_node(SearchNode)
+  calculate_cost()
+}
+
+class SearchNode {
+  coordinates
+  cost
+  parent
+}
+
+class Logger {
+  log_info()
+  log_error()
+}
+
+class UIController {
+  updateUI(()
+}
+
+abstract class SearchAlgorithm {
+  controller: UIController
+  logger: Logger
+  initialize()
+  search()
+  search_multithreaded()
+  get_solution(): SearchPath
+  notify_controller()
+  notify_logger()
+}
+
+class ConcreteSearchAlgorithm {
+  controller: UIController
+  logger: logger
+  initialize()
+  search()
+  search_multithreaded()
+  get_solution(): SearchPath
+  notify_controller()
+  notify_logger()
+}
+
+SearchAlgorithm <|-- ConcreteSearchAlgorithm
+GridWorld --> SearchPath
+SearchPath --> ConcreteSearchAlgorithm
+ConcreteSearchAlgorithm --> UIController
+ConcreteSearchAlgorithm --> Logger
+SearchPath --> SearchNode
+
+note right of ConcreteSearchAlgorithm
+  This class is using the Strategy design pattern, 
+  where SearchAlgorithm is an interface to guarantee proper
+  interaction with SearchPath.
+end note
+
+note right of UIController
+  This class is using the Observer design pattern, 
+  so we can control running the algorithm headlessly, updating
+  every 'n' expanded nodes, etc. We can constrain the update
+  frequency for good execution.
+end note
+
+note right of SearchAlgorithm::search_multithreaded
+  This interface allows for a sequential search, or in cases
+  where it will be feasible (for example baseline A*) a
+  multithreaded search can be done by using
+  divide and conquer approach.
+end note
+
+@enduml
