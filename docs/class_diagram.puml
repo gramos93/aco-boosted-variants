@@ -1,7 +1,15 @@
 @startuml
 
+class Main {
+  create_search_path(): SearchPath
+  setup_grid(): GridWorld
+  choose_search_algorithm(): ConcreteSearchAlgorithm
+  run()
+}
+
 class GridWorld {
   grid: 2D Array
+  vision: 2D Array
   update()
 }
 
@@ -23,7 +31,7 @@ class Logger {
 }
 
 class UIController {
-  updateUI(()
+  updateUI()
 }
 
 abstract class SearchAlgorithm {
@@ -48,9 +56,11 @@ class ConcreteSearchAlgorithm {
   notify_logger()
 }
 
+Main --> GridWorld
+Main --> ConcreteSearchAlgorithm
+Main  --> SearchPath
+SearchPath -[dashed]-> GridWorld
 SearchAlgorithm <|-- ConcreteSearchAlgorithm
-GridWorld <-- SearchPath
-SearchPath --> ConcreteSearchAlgorithm
 ConcreteSearchAlgorithm --> UIController
 ConcreteSearchAlgorithm --> Logger
 SearchPath --> SearchNode
@@ -66,6 +76,10 @@ note right of UIController
   so we can control running the algorithm headlessly, updating
   every 'n' expanded nodes, etc. We can constrain the update
   frequency for good execution.
+  
+  UI and logs are currently attached to the search algorithm as opposed
+  to the Main (orchestrator class) because logging and display
+  may vary between each implementation for ease of debugging.
 end note
 
 note right of SearchAlgorithm::search_multithreaded
