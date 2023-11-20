@@ -1,0 +1,17 @@
+@startuml
+
+Main -> GridWorld: Initialize Gridworld
+Main --> SearchPath: Initialize Path
+Main --> ConcreteSearchAlgorithm: Select Search Algorithm
+ConcreteSearchAlgorithm --> ConcreteSearchAlgorithm: Initialize Additional Data Structures
+ConcreteSearchAlgorithm --> ConcreteSearchAlgorithm: Execute Search
+ConcreteSearchAlgorithm --> Gridworld: Reference
+ConcreteSearchAlgorithm --> SearchPath
+SearchPath --> SearchNode : Add Explored Node
+ConcreteSearchAlgorithm --> UIController: Periodically Update UI
+ConcreteSearchAlgorithm --> Logger: Periodically Log Info
+ConcreteSearchAlgorithm --> SearchPath: Get Solution
+SearchPath --> SearchPath: Calculate Total Cost
+SearchPath --> ConcreteSearchAlgorithm : Return Cost
+
+@enduml
