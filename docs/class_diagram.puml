@@ -49,7 +49,7 @@ class ConcreteSearchAlgorithm {
 }
 
 SearchAlgorithm <|-- ConcreteSearchAlgorithm
-GridWorld --> SearchPath
+GridWorld <-- SearchPath
 SearchPath --> ConcreteSearchAlgorithm
 ConcreteSearchAlgorithm --> UIController
 ConcreteSearchAlgorithm --> Logger
