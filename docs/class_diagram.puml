@@ -17,6 +17,7 @@ class SearchPath {
   path: List<SearchNode>
   add_node(SearchNode)
   calculate_cost()
+  is_valid()
 }
 
 class SearchNode {
@@ -35,6 +36,8 @@ class UIController {
 }
 
 abstract class SearchAlgorithm {
+  world: GridWorld
+  path: SearchPath
   controller: UIController
   logger: Logger
   initialize()
@@ -46,6 +49,8 @@ abstract class SearchAlgorithm {
 }
 
 class ConcreteSearchAlgorithm {
+  world: GridWorld
+  path: SearchPath
   controller: UIController
   logger: logger
   initialize()
@@ -56,14 +61,14 @@ class ConcreteSearchAlgorithm {
   notify_logger()
 }
 
-Main --> GridWorld
-Main --> ConcreteSearchAlgorithm
-Main  --> SearchPath
-SearchPath -[dashed]-> GridWorld
+Main --> ConcreteSearchAlgorithm : Run
 SearchAlgorithm <|-- ConcreteSearchAlgorithm
-ConcreteSearchAlgorithm --> UIController
-ConcreteSearchAlgorithm --> Logger
-SearchPath --> SearchNode
+ConcreteSearchAlgorithm --> GridWorld : References
+ConcreteSearchAlgorithm --> SearchPath : Updates
+ConcreteSearchAlgorithm --> UIController : Notifies
+ConcreteSearchAlgorithm --> Logger : Notifies
+SearchPath --> SearchNode : Contains
+SearchPath --> GridWorld : Feasibility Check
 
 note right of ConcreteSearchAlgorithm
   This class is using the Strategy design pattern, 
@@ -72,14 +77,14 @@ note right of ConcreteSearchAlgorithm
 end note
 
 note right of UIController
-  This class is using the Observer design pattern, 
-  so we can control running the algorithm headlessly, updating
-  every 'n' expanded nodes, etc. We can constrain the update
-  frequency for good execution.
+  This class is using the Observer design pattern.
   
-  UI and logs are currently attached to the search algorithm as opposed
-  to the Main (orchestrator class) because logging and display
-  may vary between each implementation for ease of debugging.
+  UI and logs are currently attached to 
+  the search algorithm as opposed
+  to the Main (orchestrator class) 
+  because logging and display
+  may vary between each implementation 
+  for ease of debugging.
 end note
 
 note right of SearchAlgorithm::search_multithreaded
