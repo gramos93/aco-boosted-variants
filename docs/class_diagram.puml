@@ -1,16 +1,18 @@
 @startuml
 
 class Main {
-  create_search_path(): SearchPath
-  setup_grid(): GridWorld
-  choose_search_algorithm(): ConcreteSearchAlgorithm
+  logger: Logger
+  ui: UI
+  world: GridWorld
   run()
 }
 
 class GridWorld {
-  grid: 2D Array
+  world: 2D Array
+  strategy: SearchAlgorithm
   vision: 2D Array
-  update()
+  explored: SearchPath
+  search(strategy)
 }
 
 class SearchPath {
@@ -21,9 +23,9 @@ class SearchPath {
 }
 
 class SearchNode {
-  coordinates
-  cost
-  parent
+  coordinates: tuple<int,int>
+  cost: int
+  parent: SearchNode
 }
 
 class Logger {
@@ -31,67 +33,30 @@ class Logger {
   log_error()
 }
 
-class UIController {
-  updateUI()
+class UI {
+  display()
 }
 
-abstract class SearchAlgorithm {
-  world: GridWorld
+interface SearchAlgorithm {
   path: SearchPath
-  controller: UIController
-  logger: Logger
-  initialize()
   search()
-  search_multithreaded()
-  get_solution(): SearchPath
-  notify_controller()
-  notify_logger()
+  get_solution(()
 }
 
 class ConcreteSearchAlgorithm {
-  world: GridWorld
   path: SearchPath
-  controller: UIController
-  logger: logger
-  initialize()
+  concrete_data_struct: 2D Array
   search()
-  search_multithreaded()
-  get_solution(): SearchPath
-  notify_controller()
-  notify_logger()
+  get_solution()
+  concrete_heuristic()
 }
 
-Main --> ConcreteSearchAlgorithm : Run
-SearchAlgorithm <|-- ConcreteSearchAlgorithm
-ConcreteSearchAlgorithm --> GridWorld : References
-ConcreteSearchAlgorithm --> SearchPath : Updates
-ConcreteSearchAlgorithm --> UIController : Notifies
-ConcreteSearchAlgorithm --> Logger : Notifies
-SearchPath --> SearchNode : Contains
-SearchPath --> GridWorld : Feasibility Check
-
-note right of ConcreteSearchAlgorithm
-  This class is using the Strategy design pattern, 
-  where SearchAlgorithm is an interface to guarantee proper
-  interaction with SearchPath.
-end note
-
-note right of UIController
-  This class is using the Observer design pattern.
-  
-  UI and logs are currently attached to 
-  the search algorithm as opposed
-  to the Main (orchestrator class) 
-  because logging and display
-  may vary between each implementation 
-  for ease of debugging.
-end note
-
-note right of SearchAlgorithm::search_multithreaded
-  This interface allows for a sequential search, or in cases
-  where it will be feasible (for example baseline A*) a
-  multithreaded search can be done by using
-  divide and conquer approach.
-end note
+Main --> GridWorld : init
+Main --> UI : init
+Main --> Logger : init
+GridWorld --> SearchAlgorithm : search with
+SearchAlgorithm --> SearchPath : finds
+SearchPath --> SearchNode : contains
+ConcreteSearchAlgorithm --|> SearchAlgorithm : interface for various concrete search strategies
 
 @enduml
