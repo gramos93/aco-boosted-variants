@@ -3,9 +3,9 @@ from mealpy import PermutationVar, WOA, Problem, ACOR, BinaryVar
 
 # Define the graph representation
 graph = np.array([
-    [1, 3, 1],
-    [1, 3, 1],
-    [1, 1, 1],
+    [1, 20, 1, 1],
+    [1, 10, 10, 1],
+    [1, 1, 1, 1],
 ])
 
 
@@ -42,31 +42,32 @@ class ShortestPathProblem(Problem):
     def obj_func(self, x):
         x_decoded = self.decode_solution(x)
         path = x_decoded["placement_var"]
-        path_2d = path.reshape((3, 3)).tolist()
+        path_2d = path.reshape(self.data.shape).tolist()
 
         cost = 0
         dist = 0
         start_node = (0,0)
-        end_node = (3,3)
+        end_node = (0,3)
         for i in range(len(path_2d)):
-            for j in range(len(path_2d[0])):
+            for j in range(len(path_2d[i])):
                 if path_2d[i][j] == 1:
                     cost += self.data[i][j]
-                    dist += np.sqrt((i - end_node[0])**2 + (j - end_node[1])**2)
-        if not self.valid_path(path_2d, start_node, end_node):
+        if not self.valid_path(path_2d, (0, 0), end_node):
             return self.eps
-        return cost + dist
+        return cost
 
 
-num_nodes = len(graph)*len(graph)
+num_nodes = 3*4
 #bounds = PermutationVar(valid_set=list(range(0, num_nodes)), name="path")
 bounds = BinaryVar(n_vars=num_nodes, name="placement_var")
 problem = ShortestPathProblem(bounds=bounds, minmax="min", data=graph)
 
-model = WOA.OriginalWOA(epoch=200, pop_size=20)
+model = WOA.OriginalWOA(epoch=200, pop_size=200)
 model.solve(problem)
 
-print(f"Best agent: {model.g_best}")                    # Encoded solution
-print(f"Best solution: {model.g_best.solution}")        # Encoded solution
 print(f"Best fitness: {model.g_best.target.fitness}")
-print(np.array(model.g_best.solution).reshape((3, 3)))
+
+x_decoded = problem.decode_solution(model.g_best.solution)
+path = x_decoded["placement_var"]
+path_2d = path.reshape((3,4))
+print(path_2d)
