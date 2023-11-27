@@ -37,22 +37,31 @@ class SARProblem(Problem):
     def obj_func(self, x):
         x_decoded = self.decode_solution(x)
         path = x_decoded["placement_var"]
-        path_2d = path.reshape((self.data['grid'].shape[0], self.data['grid'].shape[1])).tolist()
-        #if not self.valid_path(path_2d, (0, 0), self.data['target']):
-        #    return self.eps
-        fitness = sum(path)
-        return fitness
+        path_2d = path.reshape(self.data['grid'].shape).tolist()
+
+        cost = 0
+        dist = 0
+        start_node = (0,0)
+        end_node = self.data['target']
+        for i in range(len(path_2d)):
+            for j in range(len(path_2d[i])):
+                if path_2d[i][j] == 1:
+                    cost += self.data['grid'][i][j]
+        if not self.valid_path(path_2d, (0, 0), end_node):
+            return self.eps
+        return cost
 
 class Strategy(OriginalACOR):
     # initialize the super class with epochs = 100 and pop_size = 3, for quick testing
-    def __init__(self, epochs=100, pop_size=20):
+    def __init__(self, epochs=100, pop_size=100):
         super().__init__(epochs, pop_size)
 
 class SearchAlgorithm():
     def __init__(self, strategy: Strategy, gridworld: GridWorld) -> None:
         self._strategy = strategy
+        self.size = gridworld.size
         #graph = self.grid_to_adjacency_matrix(gridworld.grid)
-        num_tiles = gridworld.size * gridworld.size
+        num_tiles = self.size * self.size
         bounds = BinaryVar(n_vars=num_tiles, name="placement_var")
         data={
             'grid': gridworld.grid,
@@ -77,7 +86,11 @@ class SearchAlgorithm():
         pass
 
     def solve(self):
-        return self._strategy.solve(self._problem), self.metrics
+        self._strategy.solve(self._problem)
+        x_decoded = self._problem.decode_solution(self._strategy.g_best.solution)
+        path = x_decoded["placement_var"]
+        path_2d = path.reshape((self.size, self.size))
+        return path_2d, self.metrics
 
 class BaseACOR(Strategy):
     def evolve(self, epoch):
