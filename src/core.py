@@ -21,7 +21,7 @@ def run():
 
     result, metrics = search.solve()
 
-    gridworld.update(result.solution)
+    gridworld.update(result)
 
     # Log metrics
     
