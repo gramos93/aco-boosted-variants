@@ -1,6 +1,6 @@
 from view import View
 from gridworld import GridWorld
-from optimization import SearchAlgorithm, BaseACOR # Add your own algorithm here
+from optimization import Search, BaseACO
 
 def run():
 
@@ -8,26 +8,27 @@ def run():
 
     config = {
         'dim': 32,
-        'target_location': (30, 30)
+        'num_agents': 3,
+        'visibility': 10,
+        'targets': [(25,15), (30,30), (20,30)],
+        #'targets': [(900,900), (200,100), (500,500), (700,300), (300,700)],
     }
 
     gridworld = GridWorld(config)
 
     # Initialize optimization algorithm (Strategy, gridworld)
 
-    search = SearchAlgorithm(BaseACOR(), gridworld)
+    search = Search(BaseACO(gridworld))
 
     # Run simulation
 
     result, metrics = search.solve()
 
-    gridworld.update(result)
-
     # Log metrics
     
     # Open UI and display execution log
     with View() as view:
-        view.display(gridworld.grid)
+        view.display(gridworld)
 
 if __name__ == '__main__':
     run()

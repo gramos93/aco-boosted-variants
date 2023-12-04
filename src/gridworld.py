@@ -1,25 +1,29 @@
+from agent import Agent
 import numpy as np
 
 class GridWorld:
     def __init__(self, config):
+        self.config = config
         self.size = config['dim']
-        self.target_location = config['target_location']
+        self.target_locations = config['targets']
+        self.num_agents = config['num_agents']
+        self.targets = config['targets']
         self.id_map = {
             'water': 2,
             'trees': 3,
             'dirt': 4,
-            'path': 5,
-            'target': 6,
+            'target': 5,
         }
         self.cost_map = {
+            1: 1,
             2: 10,
             3: 5,
             4: 2,
         }
-
+        self.agents = []
         self.grid = self.initialize_world()
 
-    def update(self, solution):
+    def update(self, solution): 
         # Solution is a binary array where 1 indicates a path. Apply solution to grid
         # convert solution to 2d array of ints
         solution = solution.reshape((self.size, self.size)).astype(np.int32)
@@ -41,10 +45,16 @@ class GridWorld:
         mask = (grid == 1) * (np.random.rand(self.size, self.size) < 0.05)
         grid[mask] = self.id_map['dirt']
 
-        # Agents
-        grid[self.target_location[0], self.target_location[1]] = self.id_map['target']
-
         # Targets
+        for t in self.target_locations:
+            grid[t[0], t[1]] = self.id_map['target']
+
+        # Agents
+        colors = [[255, 0, 0], [255, 50, 50], [255, 100, 100], [255, 150, 150], [255, 200, 200]]
+        for i in range(self.num_agents):
+            start_cost = self.cost_map[grid[0,0]]
+            agent = Agent(i, self.config['visibility'], colors[i], self.size)
+            self.agents.append(agent)
 
         return grid
         
