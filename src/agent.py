@@ -8,6 +8,7 @@ class Agent:
         self.color = color
         self.neighbors = [(0,1), (1,0)]
         self.size = size
+        self.visited = set()
 
     def update(self, new_location, cost):
         self.current_location = new_location
@@ -15,8 +16,10 @@ class Agent:
         self.neighbors = []
         for i, j in [(0,1), (0,-1), (1,0), (-1,0)]:
             if 0 <= new_location[0]+i < self.size and 0 <= new_location[1]+j < self.size:
+                #if (new_location[0]+i, new_location[1]+j) not in self.visited:
                 self.neighbors.append((new_location[0]+i, new_location[1]+j))
         self.path.append(Node(new_location, cost))
+        self.visited.add(new_location)
 
     def get_neighbors(self):
         return self.neighbors

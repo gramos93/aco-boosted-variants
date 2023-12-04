@@ -14,6 +14,10 @@ class iACO(ABC):
         self.found = [False for target in self._targets]
 
     @abstractmethod
+    def invert_probabilities(self, probabilities):
+        pass
+
+    @abstractmethod
     def path_cost(self, agent):
         pass
     
@@ -52,6 +56,10 @@ class Search():
         return result, metrics
 
 class BaseACO(iACO):
+    def invert_probabilities(self, probabilities):
+        inverted_probabilities = [(1 - p) / sum(1 - q for q in probabilities) for p in probabilities]
+        return inverted_probabilities
+
     def path_cost(self, agent):
         path_cost = agent.path_cost()
         return 1/path_cost if path_cost > 0 else 0
@@ -72,8 +80,12 @@ class BaseACO(iACO):
             costs = [self._cost_matrix[neighbor] for neighbor in neighbors]
             denom = np.sum([pheromone**alpha * (1/cost)**beta for pheromone, cost in zip(pheromones, costs)])
             probabilities = [pheromone**alpha * (1/cost)**beta / denom for pheromone, cost in zip(pheromones, costs)]
+            # Force ants to explore AWAY from pheromones
+            probabilities = self.invert_probabilities(probabilities)
             # choose next location
             choice = list(range(len(neighbors)))
+            if len(choice) == 0:
+                return
             next_location = np.random.choice(choice, p=probabilities)
             next_location = neighbors[next_location]
             # update agent
@@ -81,7 +93,7 @@ class BaseACO(iACO):
             # check if target found
             if next_location in self._targets:
                 # update found first False to True
-                self.found[self._targets.index(next_location.get_location())] = True
+                self.found[self._targets.index(next_location)] = True
 
         return
     
@@ -100,7 +112,7 @@ class BaseACO(iACO):
             self.agent_pheromone_update()
 
             count += 1
-            if count > 1000:
+            if count > 100000:
                 break
 
-        return []
+        return [] # has to return the shortest path, rescue task.
