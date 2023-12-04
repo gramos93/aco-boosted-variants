@@ -18,7 +18,7 @@ class iACO(ABC):
         pass
     
     @abstractmethod
-    def calculate_pheremone(self, agent, rho):
+    def calculate_pheromone(self, agent, rho):
         pass
 
     @abstractmethod
@@ -56,7 +56,7 @@ class BaseACO(iACO):
         path_cost = agent.path_cost()
         return 1/path_cost if path_cost > 0 else 0
     
-    def calculate_pheremone(self, agent, rho):
+    def calculate_pheromone(self, agent, rho):
         # with evaporation
         self._pheromone_matrix *= (1.0-rho)
         self._pheromone_matrix[agent.current_location] += self.path_cost(agent)
@@ -89,7 +89,7 @@ class BaseACO(iACO):
         # update pheromone matrix
         for agent in self._agents:
             rho = 0.5 # evaporation rate
-            self.calculate_pheremone(agent, rho)
+            self.calculate_pheromone(agent, rho)
 
     def solve(self):
         count = 0
