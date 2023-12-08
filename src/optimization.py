@@ -7,7 +7,7 @@ class iACO(ABC):
 
     def __init__(self, gridworld) -> None:
         self._cost_matrix = gridworld.grid
-        self._pheromone_matrix = np.ones_like(self._cost_matrix).astype(np.float32)
+        self._pheromone_matrix = 1/gridworld.probability_matrix
         self._agents = gridworld.agents
         self._targets = gridworld.targets
 

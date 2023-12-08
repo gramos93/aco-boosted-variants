@@ -22,6 +22,7 @@ class GridWorld:
         }
         self.agents = []
         self.grid = self.initialize_world()
+        self.probability_matrix = self.initialize_probability_matrix()
 
     def update(self, solution): 
         # Solution is a binary array where 1 indicates a path. Apply solution to grid
@@ -50,13 +51,31 @@ class GridWorld:
             grid[t[0], t[1]] = self.id_map['target']
 
         # Agents
-        colors = [[255, 0, 0], [255, 50, 50], [255, 100, 100], [255, 150, 150], [255, 200, 200]]
+        colors = [[255, 0, 0], [255, 100, 100], [255, 150, 150], [255, 200, 200], [255, 255, 255]]
         for i in range(self.num_agents):
             start_cost = self.cost_map[grid[0,0]]
             agent = Agent(i, self.config['visibility'], colors[i], self.size)
             self.agents.append(agent)
 
         return grid
+    
+    def initialize_probability_matrix(self):
+        n = self.size
+        prob_matrix = np.zeros((n, n), dtype=float)
+
+        for i in range(n):
+            for j in range(n):
+                # Calculate the Euclidean distance between the current position and the target position
+                distance = 0
+                for target in self.target_locations:
+                    distance += np.linalg.norm(np.array([i, j]) - np.array(target))
+                # The closer the entry is to the position, the bigger the probability
+                prob = 1 / (1 + distance)
+                prob_matrix[i, j] = prob
+        
+        prob_matrix /= np.sum(prob_matrix)
+
+        return prob_matrix 
         
     def generate_perlin_noise_2d(self, shape, res):
         def f(t):
