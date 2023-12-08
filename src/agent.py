@@ -36,6 +36,14 @@ class Agent:
     def get_idx(self):
         return self.idx
     
+    def get_visible_cases(self):
+        visible_cases = []
+        for k in range (self.visibility):
+            for i, j in [(0,1), (0,-1), (1,0), (-1,0)]:
+                if i*k <= self.size and j*k <= self.size:
+                    visible_cases.append((i*k, j*k))
+        return visible_cases
+    
     def __repr__(self):
         return f'Agent {self.idx} at {self.current_location}'
     

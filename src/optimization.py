@@ -64,10 +64,16 @@ class BaseACO(iACO):
         path_cost = agent.path_cost()
         return 1/path_cost if path_cost > 0 else 0
     
+    def visibility_case_cost(self, visibility_case):
+        case_cost = self._cost_matrix[visibility_case]
+        return 1/case_cost if case_cost > 0 else 0
+    
     def calculate_pheromone(self, agent, rho):
         # with evaporation
         self._pheromone_matrix *= (1.0-rho)
         self._pheromone_matrix[agent.current_location] += self.path_cost(agent)
+        for case in agent.get_visible_cases():
+            self._pheromone_matrix[case] += self.visibility_case_cost(case)
 
     def move_agents(self, alpha, beta):
         # choose next location for each agent
@@ -115,4 +121,4 @@ class BaseACO(iACO):
             if count > 100000:
                 break
 
-        return [] # has to return the shortest path, rescue task.
+        return count # has to return the shortest path, rescue task.

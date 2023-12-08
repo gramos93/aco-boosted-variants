@@ -24,6 +24,8 @@ def run():
 
     result, metrics = search.solve()
 
+    print(result)
+
     # Log metrics
     
     # Open UI and display execution log
