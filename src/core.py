@@ -7,11 +7,10 @@ def run():
     # Initialize GridWorld: edit config to alter problem
 
     config = {
-        'dim': 32,
+        'dim': 96,
         'num_agents': 2,
-        'visibility': 10,
-        'targets': [(20,20), (30,30)],
-        #'targets': [(900,900), (200,100), (500,500), (700,300), (300,700)],
+        'visibility': 3,
+        'targets': [(50,50), (70,70)],
     }
 
     gridworld = GridWorld(config)

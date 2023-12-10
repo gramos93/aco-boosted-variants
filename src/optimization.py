@@ -14,7 +14,7 @@ class iACO(ABC):
         self.found = [False for target in self._targets]
 
     @abstractmethod
-    def invert_probabilities(self, probabilities):
+    def normalize_probs(self, probabilities):
         pass
 
     @abstractmethod
@@ -56,9 +56,11 @@ class Search():
         return result, metrics
 
 class BaseACO(iACO):
-    def invert_probabilities(self, probabilities):
-        inverted_probabilities = [(1 - p) / sum(1 - q for q in probabilities) for p in probabilities]
-        return inverted_probabilities
+    def normalize_probs(self, probabilities):
+        # normalize probabilities so they sum to 1
+        probabilities = np.array(probabilities)
+        probabilities /= probabilities.sum()
+        return probabilities
 
     def path_cost(self, agent):
         path_cost = agent.path_cost()
@@ -87,7 +89,7 @@ class BaseACO(iACO):
             denom = np.sum([pheromone**alpha * (1/cost)**beta for pheromone, cost in zip(pheromones, costs)])
             probabilities = [pheromone**alpha * (1/cost)**beta / denom for pheromone, cost in zip(pheromones, costs)]
             # Force ants to explore AWAY from pheromones
-            probabilities = self.invert_probabilities(probabilities)
+            probabilities = self.normalize_probs(probabilities)
             # choose next location
             choice = list(range(len(neighbors)))
             if len(choice) == 0:
@@ -106,19 +108,19 @@ class BaseACO(iACO):
     def agent_pheromone_update(self):
         # update pheromone matrix
         for agent in self._agents:
-            rho = 0.5 # evaporation rate
+            rho = 0.0 # evaporation rate
             self.calculate_pheromone(agent, rho)
 
     def solve(self):
         count = 0
         while not all(self.found):
             # pick next best move for each agent
-            self.move_agents(alpha=1, beta=1)
+            self.move_agents(alpha=1, beta=1) # Alpha favors pheromones, beta favors cost
             # update pheromone matrix
             self.agent_pheromone_update()
 
             count += 1
-            if count > 100000:
+            if count > 10000:
                 break
 
         return count # has to return the shortest path, rescue task.
