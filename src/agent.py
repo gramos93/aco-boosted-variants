@@ -1,7 +1,8 @@
+import numpy as np
+
 class Agent:
     def __init__(self, idx, visibility, color, size):
         self.idx = idx
-        self.visibility = visibility
         self.current_location = (0,0)
         self.current_cost = 1
         self.path = [Node((0,0), 1)]
@@ -9,6 +10,7 @@ class Agent:
         self.neighbors = [(0,1), (1,0)]
         self.size = size
         self.visited = set()
+        self.visibility = visibility
 
     def update(self, new_location, cost):
         self.current_location = new_location
@@ -16,14 +18,21 @@ class Agent:
         self.neighbors = []
         for i, j in [(0,1), (0,-1), (1,0), (-1,0)]:
             if 0 <= new_location[0]+i < self.size and 0 <= new_location[1]+j < self.size:
-                #if (new_location[0]+i, new_location[1]+j) not in self.visited:
                 self.neighbors.append((new_location[0]+i, new_location[1]+j))
         self.path.append(Node(new_location, cost))
         self.visited.add(new_location)
 
+    def get_vision(self, location):
+        vision = []
+        for i in range(-self.visibility, self.visibility+1):
+            for j in range(-self.visibility, self.visibility+1):
+                if 0 <= location[0]+i < self.size and 0 <= location[1]+j < self.size:
+                    vision.append((location[0]+i, location[1]+j))
+        return vision
+
     def get_neighbors(self):
         return self.neighbors
-
+    
     def get_location(self):
         return self.current_location
     

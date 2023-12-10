@@ -3,6 +3,8 @@ import numpy as np
 
 class GridWorld:
     def __init__(self, config):
+        self.seed_value = 16
+        np.random.seed(self.seed_value)
         self.config = config
         self.size = config['dim']
         self.target_locations = config['targets']
