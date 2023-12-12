@@ -3,8 +3,7 @@ import numpy as np
 
 class GridWorld:
     def __init__(self, config):
-        self.seed_value = 16
-        np.random.seed(self.seed_value)
+        np.random.seed(config['seed'])
         self.config = config
         self.size = config['dim']
         self.target_locations = config['targets']
@@ -18,12 +17,33 @@ class GridWorld:
         }
         self.cost_map = {
             1: 1,
-            2: 10,
+            2: 100,
             3: 5,
             4: 2,
+            5: 1
         }
         self.agents = []
         self.grid = self.initialize_world()
+        self.gps = self.generate_probabilities()
+
+    def generate_probabilities(self):
+        # Generate probabilities for each cell where the target locations are the center of a gaussian
+        # and the probability is the value of the gaussian at each cell
+        gps = np.zeros((self.size, self.size))
+        for t in self.target_locations:
+            gps += self.gaussian_probability(t)
+        gps = gps / gps.max()
+        # invert the guassian
+        #gps = 1 - gps
+        return gps
+
+    def gaussian_probability(self, target):
+        # Generate a gaussian centered at target
+        x, y = np.meshgrid(np.linspace(0, self.size-1, self.size), np.linspace(0, self.size-1, self.size))
+        d = np.sqrt((y - target[0])**2 + (x - target[1])**2)
+        sigma = self.size
+        g = np.exp(-( (d)**2 / ( 2.0 * sigma**2 ) ) )
+        return g
 
     def update(self, solution): 
         # Solution is a binary array where 1 indicates a path. Apply solution to grid
@@ -52,13 +72,21 @@ class GridWorld:
             grid[t[0], t[1]] = self.id_map['target']
 
         # Agents
-        colors = [[255, 0, 0], [255, 50, 50], [255, 100, 100], [255, 150, 150], [255, 200, 200]]
+        # generate 50 agents with different colors that are shades of red
+        colors = np.random.randint(0, 255, (self.num_agents, 3))
         for i in range(self.num_agents):
             start_cost = self.cost_map[grid[0,0]]
             agent = Agent(i, self.config['visibility'], colors[i], self.size)
             self.agents.append(agent)
 
         return grid
+    
+    def get_cost_matrix(self):
+        cost_matrix = np.zeros((self.grid.shape[0], self.grid.shape[1]))
+        for i in range(self.grid.shape[0]):
+            for j in range(self.grid.shape[1]):
+                cost_matrix[i, j] = self.cost_map[self.grid[i, j]]
+        return cost_matrix
         
     def generate_perlin_noise_2d(self, shape, res):
         def f(t):
