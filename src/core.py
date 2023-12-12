@@ -12,6 +12,8 @@ def run():
         'visibility': 2,
         'targets': [(90,90)],
         'seed': 71, #73, 81, 89
+        'num_obstacle': 32,
+        'max_obstacle_size': 6,
     }
     gridworld = GridWorld(config)
 
