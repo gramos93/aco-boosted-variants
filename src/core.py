@@ -13,7 +13,7 @@ def run():
         'targets': [(90,90)],
         'seed': 71, #73, 81, 89
         'num_obstacle': 32,
-        'max_obstacle_size': 6,
+        'max_obstacle_size': 20,
     }
     gridworld = GridWorld(config)
 
