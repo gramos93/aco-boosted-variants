@@ -118,7 +118,7 @@ class BaseACO(iACO):
             next_location = np.random.choice(choice, p=probabilities)
             next_location = neighbors[next_location]
             # update agent
-            agent.update(next_location, self._cost_matrix[next_location], self._gridworld.gps)
+            agent.update(next_location, self._cost_matrix, self._gridworld.gps)
             # check if target is within vision range
             vision = agent.get_vision(next_location)
             for loc in vision:
