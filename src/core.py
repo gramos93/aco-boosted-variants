@@ -8,28 +8,33 @@ def run():
 
     config = {
         'dim': 96,
-        'num_agents': 2,
-        'visibility': 3,
-        'targets': [(50,50), (70,70)],
+        'num_agents': 50,
+        'visibility': 2,
+        'targets': [(90,90)],
+        'seed': 71, #73, 81, 89
     }
-
     gridworld = GridWorld(config)
 
-    # Initialize optimization algorithm (Strategy, gridworld)
+    # Search hyperparameters
 
-    search = Search(BaseACO(gridworld))
+    alpha = 100.0         # controls the importance of pheromone
+    beta = 10.0           # controls the importance of cost
+    zeta = 20.0           # controls the importance of gps signal
+    gamma = 1000.0        # controls the importance of optimal path pheromones
+    delta = 0.0           # controls the importance of exploratory pheromones
+    rho = 0.0000001       # evaporation rate
 
+    search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+            
     # Run simulation
 
     result, metrics = search.solve()
 
-    print(result)
-
     # Log metrics
     
-    # Open UI and display execution log
-    with View() as view:
-        view.display(gridworld)
+    # hang until space, then close program
+    input('Press enter to exit')
+    exit()
 
 if __name__ == '__main__':
     run()
