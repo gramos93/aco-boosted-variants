@@ -1,172 +1,122 @@
+from agent import Agent
 import numpy as np
-from gridworld import GridWorld
-from abc import ABC, abstractmethod
-from typing import List
-from view import View
 
-class iACO(ABC):
+class GridWorld:
+    def __init__(self, config):
+        np.random.seed(config['seed'])
+        self.config = config
+        self.size = config['dim']
+        self.target_locations = config['targets']
+        self.num_agents = config['num_agents']
+        self.targets = config['targets']
+        self.id_map = {
+            'water': 2,
+            'trees': 3,
+            'dirt': 4,
+            'target': 5,
+        }
+        self.cost_map = {
+            1: 1,
+            2: 100,
+            3: 5,
+            4: 2,
+            5: 1
+        }
+        self.agents = []
+        self.grid = self.initialize_world()
+        self.gps = self.generate_probabilities()
 
-    def __init__(self, 
-                 gridworld,
-                 alpha,      # controls the importance of pheromone
-                 beta,       # controls the importance of cost
-                 gamma,    # controls the importance of optimal path pheromones
-                 delta,   # controls the importance of exploratory pheromones
-                 zeta,
-                 rho) -> None:
-        self._gridworld = gridworld
-        self._cost_matrix = gridworld.get_cost_matrix()
-        self._pheromone_matrix = np.ones_like(self._cost_matrix).astype(np.float32)
-        self._optimal_path = []
-        self._optimal_cost = np.inf
-        self._agents = gridworld.agents
-        self._targets = gridworld.targets
+    def generate_probabilities(self):
+        # Generate probabilities for each cell where the target locations are the center of a gaussian
+        # and the probability is the value of the gaussian at each cell
+        gps = np.zeros((self.size, self.size))
+        for t in self.target_locations:
+            gps += self.gaussian_probability(t)
+        gps = gps / gps.max()
+        return gps
 
-        self.solution_flag = False
-        self.view = View()
+    def gaussian_probability(self, target):
+        # Generate a gaussian centered at target
+        x, y = np.meshgrid(np.linspace(0, self.size-1, self.size), np.linspace(0, self.size-1, self.size))
+        d = np.sqrt((y - target[0])**2 + (x - target[1])**2)
+        sigma = self.size
+        g = np.exp(-( (d)**2 / ( 2.0 * sigma**2 ) ) )
+        return g
 
-        self.found = [False for target in self._targets]
+    def update(self, solution): 
+        # Solution is a binary array where 1 indicates a path. Apply solution to grid
+        # convert solution to 2d array of ints
+        solution = solution.reshape((self.size, self.size)).astype(np.int32)
+        self.grid[solution == 1] = self.id_map['path']
+        return
 
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
-        self.delta = delta
-        self.rho = rho
-        self.zeta = zeta
+    def initialize_world(self):
+        grid = np.ones((self.size, self.size), dtype=np.int32)
+        noise = self.generate_fractal_noise_2d((self.size, self.size), (1, 1), 6)
+        noise = (noise - noise.min()) / (noise.max() - noise.min())
 
-    @abstractmethod
-    def normalize_probs(self, probabilities):
-        pass
+        threshold = 0.3
+        grid[noise < threshold] = self.id_map['water']
 
-    @abstractmethod
-    def path_cost(self, agent):
-        pass
+        potential = ((noise - threshold) / (1 - threshold))**4 * 0.7
+        mask = (noise > threshold) * (np.random.rand(self.size, self.size) < potential)
+        grid[mask] = self.id_map['trees']
+
+        mask = (grid == 1) * (np.random.rand(self.size, self.size) < 0.05)
+        grid[mask] = self.id_map['dirt']
+
+        # Targets
+        for t in self.target_locations:
+            grid[t[0], t[1]] = self.id_map['target']
+
+        # Agents
+        # generate 50 agents with different colors that are shades of red
+        colors = np.random.randint(0, 255, (self.num_agents, 3))
+        for i in range(self.num_agents):
+            start_cost = self.cost_map[grid[0,0]]
+            agent = Agent(i, self.config['visibility'], colors[i], self.size)
+            self.agents.append(agent)
+
+        return grid
     
-    @abstractmethod
-    def calculate_pheromone(self, agent, rho):
-        pass
-
-    @abstractmethod
-    def move_agents(self, alpha, beta):
-        pass
-
-    @abstractmethod
-    def agent_pheromone_update(self):
-        pass
-
-    @abstractmethod
-    def solve(self):
-        pass
-
-class Search():
-
-    def __init__(self, strategy: iACO) -> None:
-        self._strategy = strategy
-
-    @property
-    def strategy(self) -> iACO:
-        return self._strategy
-
-    @strategy.setter
-    def strategy(self, strategy: iACO) -> None:
-        self._strategy = strategy
-
-    def solve(self) -> None:
-        result = self._strategy.solve()
-        metrics = None
-        return result, metrics
-
-class BaseACO(iACO):
-    def normalize_probs(self, probabilities):
-        # normalize probabilities so they sum to 1
-        probabilities = np.array(probabilities)
-        probabilities /= probabilities.sum()
-        return probabilities
-
-    def path_cost(self, agent, delta):
-        path_cost = agent.path_cost()
-        return (1/path_cost) * delta if path_cost > 0 else 0
-    
-    def calculate_pheromone(self, agent, rho, delta):
-        # evaporate pheromone, but to a minimum of 1.
-        self._pheromone_matrix *= (1.0-rho)
-        self._pheromone_matrix[self._pheromone_matrix < 1] = 1.0
-        self._pheromone_matrix[agent.current_location] += self.path_cost(agent, delta)
-
-    def move_agents(self, alpha, beta, zeta, gamma):
-        # choose next location for each agent
-        for agent in self._agents:
-            # get neighbors
-            neighbors = agent.get_neighbors()
-            # if agent is ever obtaining a path cost worse than the optimal path, send home
-            if agent.path_cost() > self._optimal_cost:
-                agent.send_home()
-                break
-            # get pheromone values
-            pheromones = [self._pheromone_matrix[neighbor] for neighbor in neighbors]
-            # get cost values
-            costs = [self._cost_matrix[neighbor] * self._gridworld.gps[neighbor] for neighbor in neighbors]
-            gps = [self._gridworld.gps[neighbor] for neighbor in neighbors]
-            ##denom = np.sum([pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]) + 1e-6
-            #denom=1
-            probabilities = [pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]
-            probabilities = self.normalize_probs(probabilities)
-            # choose next location
-            choice = list(range(len(neighbors)))
-            if len(choice) == 0:
-                return
-            next_location = np.random.choice(choice, p=probabilities)
-            next_location = neighbors[next_location]
-            # update agent
-            agent.update(next_location, self._cost_matrix[next_location], self._gridworld.gps)
-            # check if target is within vision range
-            vision = agent.get_vision(next_location)
-            for loc in vision:
-                if loc in self._targets:
-                    # update found first False to True
-                    self.found[self._targets.index(loc)] = True
-                    # optimal path check
-                    if agent.path_cost() < self._optimal_cost:
-                        self.solution_flag = True
-                        self._optimal_cost = agent.path_cost()
-                        self._optimal_path = agent.get_path()
-                        # update pheromone matrix with optimal path
-                        for i in range(len(self._optimal_path)):
-                            node = self._optimal_path[-i]
-                            self._pheromone_matrix[node.location] += self.path_cost(agent, delta=1.0) * gamma
-                            # diminish gamma slightly
-                            gamma *= 0.99
-                        # send agent home
-                        agent.send_home()
-                        break
-    
-    def agent_pheromone_update(self, rho, delta):
-        # update pheromone matrix
-        for agent in self._agents:
-            self.calculate_pheromone(agent, rho, delta)
-
-    def solve(self):
-        count = 0
-        ##while not all(self.found):
-        while True:
-            
-            # pick next best move for each agent
-            self.move_agents(self.alpha, self.beta, self.zeta, self.gamma)
-            # update pheromone matrix
-            self.agent_pheromone_update(self.rho, self.delta)
-
-            if count % 10 == 0 or self.solution_flag:
-                self.solution_flag = False
-                self.view.display(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix)
-
-            count += 1
-            if count > 100000:
-                break
-
-        print(f'Solution found in {count} iterations.')
-        print(f'Optimal path cost: {self._optimal_cost}')
-        print(f'Optimal path length: {len(self._optimal_path)}')
-        # calculate path from start to finish
-        #paths = reconstruct_paths()
-        #return paths
-        return self._optimal_path, None
+    def get_cost_matrix(self):
+        cost_matrix = np.zeros((self.grid.shape[0], self.grid.shape[1]))
+        for i in range(self.grid.shape[0]):
+            for j in range(self.grid.shape[1]):
+                cost_matrix[i, j] = self.cost_map[self.grid[i, j]]
+        return cost_matrix
+        
+    def generate_perlin_noise_2d(self, shape, res):
+        def f(t):
+            return 6*t**5 - 15*t**4 + 10*t**3
+        
+        delta = (res[0] / shape[0], res[1] / shape[1])
+        d = (shape[0] // res[0], shape[1] // res[1])
+        grid = np.mgrid[0:res[0]:delta[0],0:res[1]:delta[1]].transpose(1, 2, 0) % 1
+        # Gradients
+        angles = 2*np.pi*np.random.rand(res[0]+1, res[1]+1)
+        gradients = np.dstack((np.cos(angles), np.sin(angles)))
+        g00 = gradients[0:-1,0:-1].repeat(d[0], 0).repeat(d[1], 1)
+        g10 = gradients[1:,0:-1].repeat(d[0], 0).repeat(d[1], 1)
+        g01 = gradients[0:-1,1:].repeat(d[0], 0).repeat(d[1], 1)
+        g11 = gradients[1:,1:].repeat(d[0], 0).repeat(d[1], 1)
+        # Ramps
+        n00 = np.sum(grid * g00, 2)
+        n10 = np.sum(np.dstack((grid[:,:,0]-1, grid[:,:,1])) * g10, 2)
+        n01 = np.sum(np.dstack((grid[:,:,0], grid[:,:,1]-1)) * g01, 2)
+        n11 = np.sum(np.dstack((grid[:,:,0]-1, grid[:,:,1]-1)) * g11, 2)
+        # Interpolation
+        t = f(grid)
+        n0 = n00*(1-t[:,:,0]) + t[:,:,0]*n10
+        n1 = n01*(1-t[:,:,0]) + t[:,:,0]*n11
+        return np.sqrt(2)*((1-t[:,:,1])*n0 + t[:,:,1]*n1)
+        
+    def generate_fractal_noise_2d(self, shape, res, octaves=1, persistence=0.5):
+        noise = np.zeros(shape)
+        frequency = 1
+        amplitude = 1
+        for _ in range(octaves):
+            noise += amplitude * self.generate_perlin_noise_2d(shape, (frequency*res[0], frequency*res[1]))
+            frequency *= 2
+            amplitude *= persistence
+        return noise
