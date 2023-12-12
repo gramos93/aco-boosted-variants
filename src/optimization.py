@@ -91,7 +91,7 @@ class BaseACO(iACO):
         # evaporate pheromone, but to a minimum of 1.
         self._pheromone_matrix *= (1.0-rho)
         self._pheromone_matrix[self._pheromone_matrix < 1] = 1.0
-        #self._pheromone_matrix[agent.current_location] += self.path_cost(agent, delta)
+        self._pheromone_matrix[agent.current_location] += self.path_cost(agent, delta)
 
     def move_agents(self, alpha, beta, zeta, gamma):
         # choose next location for each agent
@@ -107,8 +107,9 @@ class BaseACO(iACO):
             # get cost values
             costs = [self._cost_matrix[neighbor] * self._gridworld.gps[neighbor] for neighbor in neighbors]
             gps = [self._gridworld.gps[neighbor] for neighbor in neighbors]
-            denom = np.sum([pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]) + 1e-6
-            probabilities = [pheromone**alpha * (1/cost)**beta * signal**zeta / denom for pheromone, cost, signal in zip(pheromones, costs, gps)]
+            ##denom = np.sum([pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]) + 1e-6
+            #denom=1
+            probabilities = [pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]
             probabilities = self.normalize_probs(probabilities)
             # choose next location
             choice = list(range(len(neighbors)))
@@ -154,7 +155,7 @@ class BaseACO(iACO):
             # update pheromone matrix
             self.agent_pheromone_update(self.rho, self.delta)
 
-            if count % 20 == 0 or self.solution_flag:
+            if count % 10 == 0 or self.solution_flag:
                 self.solution_flag = False
                 self.view.display(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix)
 

@@ -32,7 +32,7 @@ class View:
 
         for agent in agents:
             path = agent.get_path()
-            for node in path[-5:]:
+            for node in path[-2:]:
                 image[node.i, node.j] = agent.color
 
         # rescale pheremone matrix to be between 0 and 1

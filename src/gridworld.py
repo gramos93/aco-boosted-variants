@@ -33,8 +33,6 @@ class GridWorld:
         for t in self.target_locations:
             gps += self.gaussian_probability(t)
         gps = gps / gps.max()
-        # invert the guassian
-        #gps = 1 - gps
         return gps
 
     def gaussian_probability(self, target):

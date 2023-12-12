@@ -6,28 +6,12 @@ def run():
 
     # Initialize GridWorld: edit config to alter problem
 
-    '''
     config = {
         'dim': 96,
-        'num_agents': 20,
-        'visibility': 2,
-        'targets': [(90,10)],
-        'seed': 63,
-    }
-    config = {
-        'dim': 96,
-        'num_agents': 20,
+        'num_agents': 50,
         'visibility': 2,
         'targets': [(90,90)],
-        'seed': 65,
-    }
-    '''
-    config = {
-        'dim': 96,
-        'num_agents': 20,
-        'visibility': 2,
-        'targets': [(90,90)],
-        'seed': 71,
+        'seed': 71, #73, 81, 89
     }
     gridworld = GridWorld(config)
 
@@ -38,9 +22,9 @@ def run():
     zeta = 20.0           # controls the importance of gps signal
     gamma = 1000.0        # controls the importance of optimal path pheromones
     delta = 0.0           # controls the importance of exploratory pheromones
-    rho = 0.000001        # evaporation rate
+    rho = 0.0000001       # evaporation rate
 
-    search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho))
+    search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
             
     # Run simulation
 
