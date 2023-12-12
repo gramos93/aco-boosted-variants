@@ -24,7 +24,7 @@ class GridWorld:
             3: 5,
             4: 2,
             5: 1,
-            6: 10000
+            6: -1
         }
         self.agents = []
         self.grid = self.initialize_world()
@@ -66,10 +66,6 @@ class GridWorld:
         noise = self.generate_fractal_noise_2d((self.size, self.size), (1, 1), 6)
         noise = (noise - noise.min()) / (noise.max() - noise.min())
 
-        for _ in range(self.num_obstacle):
-            pos_x,pos_y,width,height=self.generate_hard_obstacle()
-            grid[pos_x:pos_x+width,pos_y:pos_y+height]=self.id_map['hard_obstacle']
-
         threshold = 0.3
         grid[noise < threshold] = self.id_map['water']
 
@@ -79,6 +75,10 @@ class GridWorld:
 
         mask = (grid == 1) * (np.random.rand(self.size, self.size) < 0.05)
         grid[mask] = self.id_map['dirt']
+
+        for _ in range(self.num_obstacle):
+            pos_x,pos_y,width,height=self.generate_hard_obstacle()
+            grid[pos_x:pos_x+width,pos_y:pos_y+height]=self.id_map['hard_obstacle']
 
         # Targets
         for t in self.target_locations:
