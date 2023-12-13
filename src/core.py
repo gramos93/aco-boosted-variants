@@ -1,6 +1,7 @@
 from view import View
+from agent import Agent, SpittingAgent
 from gridworld import GridWorld
-from optimization import Search, BaseACO
+from optimization import Search, BaseACO, SpittingAnts
 
 def run():
 
@@ -8,11 +9,12 @@ def run():
 
     config = {
         'dim': 96,
-        'num_agents': 50,
+        'num_agents': 2,
+        'agent_type': SpittingAgent,
         'visibility': 2,
         'targets': [(90,90)],
         'seed': 71, #73, 81, 89
-        'num_obstacle': 32,
+        'num_obstacle': 0,
         'max_obstacle_size': 20,
     }
     gridworld = GridWorld(config)
@@ -26,7 +28,7 @@ def run():
     delta = 0.0           # controls the importance of exploratory pheromones
     rho = 0.0000001       # evaporation rate
 
-    search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+    search = Search(SpittingAnts(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
             
     # Run simulation
 

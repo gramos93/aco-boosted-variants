@@ -18,6 +18,30 @@ class View:
     def __exit__(self, exc_type, exc_value, traceback):
         print('Exiting context: ', self, exc_type, exc_value, traceback)
 
+    def display_ants(self, gridworld):
+        grid = gridworld.grid
+        agents = gridworld.agents
+        # convert grid to image
+        image = np.zeros((grid.shape[0], grid.shape[1], 3), dtype=np.uint8)
+        # for i in range(grid.shape[0]):
+        #     for j in range(grid.shape[1]):
+        #         image[i, j] = self.color_map[grid[i, j]]
+
+        for agent in agents:
+            path = agent.get_path()
+            for node in path[-2:]:
+                image[node.i, node.j] = agent.color
+
+        plt.figure('Search And Rescue: Swarm Optimization')
+        # set font size small
+        plt.rcParams.update({'font.size': 8})
+        plt.ion()
+        plt.clf()
+        plt.figure(1,4,1)
+        plt.imshow(image)
+        plt.pause(0.001)
+
+
     def display(self, gridworld, optimal_path, pheremone_matrix, cost_matrix):
         grid = gridworld.grid
         agents = gridworld.agents

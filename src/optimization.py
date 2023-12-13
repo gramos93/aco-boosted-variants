@@ -4,16 +4,18 @@ from abc import ABC, abstractmethod
 from typing import List
 from view import View
 
-class iACO(ABC):
 
-    def __init__(self, 
-                 gridworld,
-                 alpha,      # controls the importance of pheromone
-                 beta,       # controls the importance of cost
-                 gamma,    # controls the importance of optimal path pheromones
-                 delta,   # controls the importance of exploratory pheromones
-                 zeta,
-                 rho) -> None:
+class iACO(ABC):
+    def __init__(
+        self,
+        gridworld,
+        alpha,  # controls the importance of pheromone
+        beta,  # controls the importance of cost
+        gamma,  # controls the importance of optimal path pheromones
+        delta,  # controls the importance of exploratory pheromones
+        zeta,
+        rho,
+    ) -> None:
         self._gridworld = gridworld
         self._cost_matrix = gridworld.get_cost_matrix()
         self._pheromone_matrix = np.ones_like(self._cost_matrix).astype(np.float32)
@@ -41,7 +43,7 @@ class iACO(ABC):
     @abstractmethod
     def path_cost(self, agent):
         pass
-    
+
     @abstractmethod
     def calculate_pheromone(self, agent, rho):
         pass
@@ -58,8 +60,8 @@ class iACO(ABC):
     def solve(self):
         pass
 
-class Search():
 
+class Search:
     def __init__(self, strategy: iACO) -> None:
         self._strategy = strategy
 
@@ -76,6 +78,7 @@ class Search():
         metrics = None
         return result, metrics
 
+
 class BaseACO(iACO):
     def normalize_probs(self, probabilities):
         # normalize probabilities so they sum to 1
@@ -85,11 +88,11 @@ class BaseACO(iACO):
 
     def path_cost(self, agent, delta):
         path_cost = agent.path_cost()
-        return (1/path_cost) * delta if path_cost > 0 else 0
-    
+        return (1 / path_cost) * delta if path_cost > 0 else 0
+
     def calculate_pheromone(self, agent, rho, delta):
         # evaporate pheromone, but to a minimum of 1.
-        self._pheromone_matrix *= (1.0-rho)
+        self._pheromone_matrix *= 1.0 - rho
         self._pheromone_matrix[self._pheromone_matrix < 1] = 1.0
         self._pheromone_matrix[agent.current_location] += self.path_cost(agent, delta)
 
@@ -105,11 +108,15 @@ class BaseACO(iACO):
             # get pheromone values
             pheromones = [self._pheromone_matrix[neighbor] for neighbor in neighbors]
             # get cost values
-            costs = [self._cost_matrix[neighbor] * self._gridworld.gps[neighbor] for neighbor in neighbors]
+            costs = [
+                self._cost_matrix[neighbor] * self._gridworld.gps[neighbor]
+                for neighbor in neighbors
+            ]
             gps = [self._gridworld.gps[neighbor] for neighbor in neighbors]
-            ##denom = np.sum([pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]) + 1e-6
-            #denom=1
-            probabilities = [pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]
+            probabilities = [
+                pheromone**alpha * (1 / cost) ** beta * signal**zeta
+                for pheromone, cost, signal in zip(pheromones, costs, gps)
+            ]
             probabilities = self.normalize_probs(probabilities)
             # choose next location
             choice = list(range(len(neighbors)))
@@ -133,13 +140,15 @@ class BaseACO(iACO):
                         # update pheromone matrix with optimal path
                         for i in range(len(self._optimal_path)):
                             node = self._optimal_path[-i]
-                            self._pheromone_matrix[node.location] += self.path_cost(agent, delta=1.0) * gamma
+                            self._pheromone_matrix[node.location] += (
+                                self.path_cost(agent, delta=1.0) * gamma
+                            )
                             # diminish gamma slightly
                             gamma *= 0.99
                         # send agent home
                         agent.send_home()
                         break
-    
+
     def agent_pheromone_update(self, rho, delta):
         # update pheromone matrix
         for agent in self._agents:
@@ -149,7 +158,6 @@ class BaseACO(iACO):
         count = 0
         ##while not all(self.found):
         while True:
-            
             # pick next best move for each agent
             self.move_agents(self.alpha, self.beta, self.zeta, self.gamma)
             # update pheromone matrix
@@ -157,16 +165,56 @@ class BaseACO(iACO):
 
             if count % 10 == 0 or self.solution_flag:
                 self.solution_flag = False
-                self.view.display(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix)
-
+                self.view.display(
+                    self._gridworld,
+                    self._optimal_path,
+                    self._pheromone_matrix,
+                    self._cost_matrix,
+                )
             count += 1
             if count > 100000:
                 break
 
-        print(f'Solution found in {count} iterations.')
-        print(f'Optimal path cost: {self._optimal_cost}')
-        print(f'Optimal path length: {len(self._optimal_path)}')
+        print(f"Solution found in {count} iterations.")
+        print(f"Optimal path cost: {self._optimal_cost}")
+        print(f"Optimal path length: {len(self._optimal_path)}")
         # calculate path from start to finish
-        #paths = reconstruct_paths()
-        #return paths
+        # paths = reconstruct_paths()
+        # return paths
+        return self._optimal_path, None
+    
+class SpittingAnts(BaseACO):
+    def solve(self):
+        count = 0
+        ##while not all(self.found):
+        try:
+            while True:
+                # pick next best move for each agent
+                self.move_agents(self.alpha, self.beta, self.zeta, self.gamma)
+                # update pheromone matrix
+                self.agent_pheromone_update(self.rho, self.delta)
+
+                if count % 1 == 0 or self.solution_flag:
+                    self.solution_flag = False
+                    # self.view.display(
+                    #     self._gridworld,
+                    #     self._optimal_path,
+                    #     self._pheromone_matrix,
+                    #     self._cost_matrix,
+                    # )
+                    self.view.display_ants(self._gridworld)
+
+                count += 1
+                if count > 100000:
+                    break
+        except KeyboardInterrupt:
+            pass
+        
+        if sum(self.found) == len(self._targets):
+            print(f"Solution found in {count} iterations.")
+            print(f"Path cost: {self._optimal_cost}")
+            print(f"Path length: {len(self._optimal_path)}")
+        else:
+            print(f"No solution found in {count} iterations.")
+
         return self._optimal_path, None

@@ -89,7 +89,9 @@ class GridWorld:
         colors = np.random.randint(0, 255, (self.num_agents, 3))
         for i in range(self.num_agents):
             start_cost = self.cost_map[grid[0,0]]
-            agent = Agent(i, self.config['visibility'], colors[i], self.size)
+            agent = self.config['agent_type'](
+                i, self.config['visibility'], colors[i], self.size
+            )
             self.agents.append(agent)
 
         return grid
