@@ -1,4 +1,5 @@
 from view import View
+from agent import Agent
 from gridworld import GridWorld
 from optimization import Search, BaseACO
 
@@ -9,6 +10,7 @@ def run():
     config = {
         'dim': 96,
         'num_agents': 50,
+        'agent_type': Agent,
         'visibility': 2,
         'targets': [(90,90)],
         'seed': 71, #73, 81, 89
@@ -27,13 +29,13 @@ def run():
     rho = 0.0000001       # evaporation rate
 
     search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
-            
+
     # Run simulation
 
     result, metrics = search.solve()
 
     # Log metrics
-    
+
     # hang until space, then close program
     input('Press enter to exit')
     exit()

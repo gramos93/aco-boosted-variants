@@ -47,19 +47,19 @@ class GridWorld:
         g = np.exp(-( (d)**2 / ( 2.0 * sigma**2 ) ) )
         return g
 
-    def update(self, solution): 
+    def update(self, solution):
         # Solution is a binary array where 1 indicates a path. Apply solution to grid
         # convert solution to 2d array of ints
         solution = solution.reshape((self.size, self.size)).astype(np.int32)
         self.grid[solution == 1] = self.id_map['path']
         return
-    
-    def generate_hard_obstacle(self):        
+
+    def generate_hard_obstacle(self):
         width=np.random.randint(1,self.max_obstacle_size)
         height=np.random.randint(1,self.max_obstacle_size)
         pos_x=np.random.randint(width,self.size-width)
         pos_y=np.random.randint(height,self.size-height)
-        return pos_x,pos_y,width,height           
+        return pos_x,pos_y,width,height
 
     def initialize_world(self):
         grid = np.ones((self.size, self.size), dtype=np.int32)
@@ -89,22 +89,24 @@ class GridWorld:
         colors = np.random.randint(0, 255, (self.num_agents, 3))
         for i in range(self.num_agents):
             start_cost = self.cost_map[grid[0,0]]
-            agent = Agent(i, self.config['visibility'], colors[i], self.size)
+            agent = self.config['agent_type'](
+                i, self.config['visibility'], colors[i], self.size
+            )
             self.agents.append(agent)
 
         return grid
-    
+
     def get_cost_matrix(self):
         cost_matrix = np.zeros((self.grid.shape[0], self.grid.shape[1]))
         for i in range(self.grid.shape[0]):
             for j in range(self.grid.shape[1]):
                 cost_matrix[i, j] = self.cost_map[self.grid[i, j]]
         return cost_matrix
-        
+
     def generate_perlin_noise_2d(self, shape, res):
         def f(t):
             return 6*t**5 - 15*t**4 + 10*t**3
-        
+
         delta = (res[0] / shape[0], res[1] / shape[1])
         d = (shape[0] // res[0], shape[1] // res[1])
         grid = np.mgrid[0:res[0]:delta[0],0:res[1]:delta[1]].transpose(1, 2, 0) % 1
@@ -125,7 +127,7 @@ class GridWorld:
         n0 = n00*(1-t[:,:,0]) + t[:,:,0]*n10
         n1 = n01*(1-t[:,:,0]) + t[:,:,0]*n11
         return np.sqrt(2)*((1-t[:,:,1])*n0 + t[:,:,1]*n1)
-        
+
     def generate_fractal_noise_2d(self, shape, res, octaves=1, persistence=0.5):
         noise = np.zeros(shape)
         frequency = 1
