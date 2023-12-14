@@ -52,6 +52,12 @@ class Agent:
                 if 0 <= location[0]+i < self.size and 0 <= location[1]+j < self.size:
                     vision.append((location[0]+i, location[1]+j))
         return vision
+    
+    def get_best_momentum_node(self):
+        last_visited = self.path[len(self.path)-2].get_location() if len(self.path) > 1 else None
+        momentum_best_node = (self.current_location[0]-last_visited[0]+self.current_location[0], self.current_location[1]-last_visited[1]+self.current_location[1]) if last_visited != None else None
+
+        return momentum_best_node
 
     def get_neighbors(self):
         return self.neighbors
