@@ -152,7 +152,7 @@ class BaseACO(iACO):
     def agent_pheromone_update(self, rho, delta):
         # update pheromone matrix
         for agent in self._agents:
-            self.calculate_pheromone(agent, rho, delta)
+            self.calculate_pheromone(rho, delta)
 
     def solve(self):
         count = 0
@@ -185,6 +185,12 @@ class BaseACO(iACO):
 
 
 class SpittingAnts(BaseACO):
+    def calculate_pheromone(self, rho, delta):
+        # evaporate pheromone, but to a minimum of 1.
+        self._pheromone_matrix *= 1.0 - rho
+        self._pheromone_matrix[self._pheromone_matrix < 1] = 1.0
+        # self._pheromone_matrix[agent.current_location] += self.path_cost(agent, delta)
+
     def get_neighbourhood(self, agent, alpha, beta, zeta):
         # get neighbors with visilbility
         neighbourhood = agent.get_neighbors().copy()
@@ -193,10 +199,10 @@ class SpittingAnts(BaseACO):
         pheromones, costs, gps, probabilities = [], [], [], []
         for neighbor in neighbourhood:
             pheromones.append(self._pheromone_matrix[neighbor])
-            costs.append(self._cost_matrix[neighbor] * self._gridworld.gps[neighbor])
+            costs.append(self._cost_matrix[neighbor])
             gps.append(self._gridworld.gps[neighbor])
             probabilities.append(
-                pheromones[-1] ** alpha * (1 / costs[-1]) ** beta * gps[-1] ** zeta
+                ((1 / pheromones[-1]) ** alpha) + ((1 / costs[-1]) ** beta) + (gps[-1] ** zeta)
             )
         probabilities = self.normalize_probs(probabilities)
         return neighbourhood, probabilities
@@ -215,12 +221,15 @@ class SpittingAnts(BaseACO):
         )
         if (agent._residual_direction == 0).all():
             agent._residual_direction = agent._desired_direction
-
-        adjusted_direction = agent._desired_direction + (
-            np.random.uniform(low=-1, high=1, size=2) * (1 - agent.decisiveness)
+        # adjust desired direction slightly  at randomly
+        wonder_factor = np.random.uniform(low=-1, high=1, size=2)
+        pheromone_factor = np.array(neighbourhood[np.argmax(probabilities)]) - agent.current_location
+        adjusted_direction = (
+            agent._desired_direction + agent.decisiveness *
+            (pheromone_factor * agent.decisiveness + wonder_factor * (1-agent.decisiveness))
         )
+        agent.decisiveness = np.clip(agent.decisiveness / 0.999, 0.1, 0.8)
         agent._desired_direction = agent.normalize(adjusted_direction)
-        print(agent._desired_direction)
         return move
 
     def move_agents(self, alpha, beta, zeta, gamma):
@@ -228,7 +237,7 @@ class SpittingAnts(BaseACO):
         for agent in self._agents:
             # if agent is ever obtaining a path cost worse than the optimal path,
             # send home
-            if agent.path_cost() > self._optimal_cost:
+            if agent.path_cost() > self._optimal_cost * 2:
                 agent.send_home()
                 continue
 
@@ -238,9 +247,7 @@ class SpittingAnts(BaseACO):
             next_location = self.choose_location(
                 agent, neighbourhood, probabilities
             )
-            # next_location = neighbors[np.random.choice(len(neighbors), p=probabilities)]
             agent.update(next_location, self._cost_matrix, self._gridworld.gps)
-
             # check if target is within vision range
             vision = agent.get_vision(next_location)
             for loc in vision:
@@ -248,20 +255,19 @@ class SpittingAnts(BaseACO):
                     # update found first False to True
                     self.found[self._targets.index(loc)] = True
                     # optimal path check
+                    for node in agent.get_path()[::-1]:
+                        self._pheromone_matrix[node.location] += (
+                            self.path_cost(agent, delta=1.0) * gamma
+                        )
+                        # diminish gamma slightly
+                        gamma *= 0.99
                     if agent.path_cost() < self._optimal_cost:
                         self.solution_flag = True
                         self._optimal_cost = agent.path_cost()
                         self._optimal_path = agent.get_path()
                         # update pheromone matrix with optimal path
-                        for i in range(len(self._optimal_path)):
-                            node = self._optimal_path[-i]
-                            self._pheromone_matrix[node.location] += (
-                                self.path_cost(agent, delta=1.0) * gamma
-                            )
-                            # diminish gamma slightly
-                            gamma *= 0.99
-                        # send agent home
-                        agent.send_home()
+                    # send agent home
+                    agent.send_home()
 
     def solve(self):
         count = 0
@@ -271,17 +277,19 @@ class SpittingAnts(BaseACO):
                 # pick next best move for each agent
                 self.move_agents(self.alpha, self.beta, self.zeta, self.gamma)
                 # update pheromone matrix
-                self.agent_pheromone_update(self.rho, self.delta)
+                # self.agent_pheromone_update(self.rho, self.delta)
+                self._pheromone_matrix *= 1.0 - self.rho
+                self._pheromone_matrix[self._pheromone_matrix < 1] = 1.0
 
-                if count % 1 == 0 or self.solution_flag:
+                if count % 10 == 0 or self.solution_flag:
                     self.solution_flag = False
-                    # self.view.display(
-                    #     self._gridworld,
-                    #     self._optimal_path,
-                    #     self._pheromone_matrix,
-                    #     self._cost_matrix,
-                    # )
-                    self.view.display_ants(self._gridworld)
+                self.view.display(
+                    self._gridworld,
+                    self._optimal_path,
+                    self._pheromone_matrix,
+                    self._cost_matrix,
+                )
+                    # self.view.display_ants(self._gridworld)
 
                 count += 1
                 if count > 100000:

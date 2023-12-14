@@ -9,26 +9,25 @@ def run():
 
     config = {
         'dim': 96,
-        'num_agents': 1,
+        'num_agents': 20,
         'agent_type': SpittingAgent,
         'visibility': 2,
         'targets': [(90,90)],
         'seed': 71, #73, 81, 89
-        'num_obstacle': 0,
+        'num_obstacle': 10,
         'max_obstacle_size': 20,
     }
     gridworld = GridWorld(config)
 
-    # Search hyperparameters
 
-    alpha = 100.0         # controls the importance of pheromone
-    beta = 10.0           # controls the importance of cost
-    zeta = 20.0           # controls the importance of gps signal
-    gamma = 1000.0        # controls the importance of optimal path pheromones
-    delta = 0.0           # controls the importance of exploratory pheromones
-    rho = 0.0000001       # evaporation rate
+    alpha = 50.0         # controls the importance of pheromone
+    beta = 2.0         # controls the importance of cost
+    zeta = 120.0           # controls the importance of gps signal
+    gamma = 2.0        # controls the importance of optimal path pheromones
+    delta = 1.0           # controls the importance of exploratory pheromones
+    rho = 1E-6        # evaporation rate
 
-    search = Search(SpittingAnts(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+    search = Search(SpittingAnts(gridworld, alpha, beta, gamma, delta, zeta, rho))
             
     # Run simulation
 
