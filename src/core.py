@@ -9,7 +9,7 @@ def run():
 
     config = {
         'dim': 96,
-        'num_agents': 2,
+        'num_agents': 1,
         'agent_type': SpittingAgent,
         'visibility': 2,
         'targets': [(90,90)],

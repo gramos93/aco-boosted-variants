@@ -101,10 +101,11 @@ class BaseACO(iACO):
         for agent in self._agents:
             # get neighbors
             neighbors = agent.get_neighbors()
-            # if agent is ever obtaining a path cost worse than the optimal path, send home
+            # if agent is ever obtaining a path cost worse than the optimal path,
+            # send home
             if agent.path_cost() > self._optimal_cost:
                 agent.send_home()
-                break
+                continue
             # get pheromone values
             pheromones = [self._pheromone_matrix[neighbor] for neighbor in neighbors]
             # get cost values
@@ -147,7 +148,6 @@ class BaseACO(iACO):
                             gamma *= 0.99
                         # send agent home
                         agent.send_home()
-                        break
 
     def agent_pheromone_update(self, rho, delta):
         # update pheromone matrix
@@ -182,8 +182,87 @@ class BaseACO(iACO):
         # paths = reconstruct_paths()
         # return paths
         return self._optimal_path, None
-    
+
+
 class SpittingAnts(BaseACO):
+    def get_neighbourhood(self, agent, alpha, beta, zeta):
+        # get neighbors with visilbility
+        neighbourhood = agent.get_neighbors().copy()
+        # vision = agent.get_vision(agent.current_location)
+        # neighbourhood.extend(vision)
+        pheromones, costs, gps, probabilities = [], [], [], []
+        for neighbor in neighbourhood:
+            pheromones.append(self._pheromone_matrix[neighbor])
+            costs.append(self._cost_matrix[neighbor] * self._gridworld.gps[neighbor])
+            gps.append(self._gridworld.gps[neighbor])
+            probabilities.append(
+                pheromones[-1] ** alpha * (1 / costs[-1]) ** beta * gps[-1] ** zeta
+            )
+        probabilities = self.normalize_probs(probabilities)
+        return neighbourhood, probabilities
+    
+    def choose_location(self, agent, neighbourhood, probabilities):
+        move_vectors = np.array(neighbourhood) - (
+            np.array(agent._residual_direction) + np.array(agent.current_location)
+        )
+        # choose closest point to agent's desired direction.
+        move = neighbourhood[np.argmin(np.linalg.norm(move_vectors, axis=1))]
+        # Since the world is discretized, we have to calculate a residual direction to
+        # keep on the agent's track.
+        agent._residual_direction = agent.normalize(
+            agent._desired_direction - \
+            (np.array(move) - np.array(agent.current_location))
+        )
+        if (agent._residual_direction == 0).all():
+            agent._residual_direction = agent._desired_direction
+
+        adjusted_direction = agent._desired_direction + (
+            np.random.uniform(low=-1, high=1, size=2) * (1 - agent.decisiveness)
+        )
+        agent._desired_direction = agent.normalize(adjusted_direction)
+        print(agent._desired_direction)
+        return move
+
+    def move_agents(self, alpha, beta, zeta, gamma):
+        # choose next location for each agent
+        for agent in self._agents:
+            # if agent is ever obtaining a path cost worse than the optimal path,
+            # send home
+            if agent.path_cost() > self._optimal_cost:
+                agent.send_home()
+                continue
+
+            neighbourhood, probabilities = self.get_neighbourhood(
+                agent, alpha, beta, zeta
+            )
+            next_location = self.choose_location(
+                agent, neighbourhood, probabilities
+            )
+            # next_location = neighbors[np.random.choice(len(neighbors), p=probabilities)]
+            agent.update(next_location, self._cost_matrix, self._gridworld.gps)
+
+            # check if target is within vision range
+            vision = agent.get_vision(next_location)
+            for loc in vision:
+                if loc in self._targets:
+                    # update found first False to True
+                    self.found[self._targets.index(loc)] = True
+                    # optimal path check
+                    if agent.path_cost() < self._optimal_cost:
+                        self.solution_flag = True
+                        self._optimal_cost = agent.path_cost()
+                        self._optimal_path = agent.get_path()
+                        # update pheromone matrix with optimal path
+                        for i in range(len(self._optimal_path)):
+                            node = self._optimal_path[-i]
+                            self._pheromone_matrix[node.location] += (
+                                self.path_cost(agent, delta=1.0) * gamma
+                            )
+                            # diminish gamma slightly
+                            gamma *= 0.99
+                        # send agent home
+                        agent.send_home()
+
     def solve(self):
         count = 0
         ##while not all(self.found):
@@ -209,7 +288,7 @@ class SpittingAnts(BaseACO):
                     break
         except KeyboardInterrupt:
             pass
-        
+
         if sum(self.found) == len(self._targets):
             print(f"Solution found in {count} iterations.")
             print(f"Path cost: {self._optimal_cost}")

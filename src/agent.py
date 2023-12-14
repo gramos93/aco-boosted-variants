@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numpy as np
 
 
@@ -90,6 +91,23 @@ class Agent:
 
 
 class SpittingAgent(Agent):
+    def __init__(self, idx, visibility, color, size):
+        super().__init__(idx, visibility, color, size)
+        directions = [(1, 1), (1, 1)]
+        # directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        self._desired_direction = directions[
+            np.random.choice(len(directions))
+        ]
+        self._residual_direction = deepcopy(self._desired_direction)
+        self.decisiveness = 0.4
+        self.current_location = (0, 0)
+
+    def normalize(self, vector):
+        norm = np.linalg.norm(vector)
+        if norm == 0:
+            return vector
+        return vector / norm
+
     def update(self, new_location, cost_matrix, gps):
         cost = cost_matrix[new_location]
         self.current_location = new_location
@@ -112,24 +130,25 @@ class SpittingAgent(Agent):
         valid_neighbors = valid_neighbors[
             cost_matrix[valid_neighbors[:, 0], valid_neighbors[:, 1]] != -1
         ]
-        # Filtering visited neighbors
-        unvisited_neighbors = [
-            tuple(neighbor) for neighbor in valid_neighbors
-            if tuple(neighbor) not in self.visited
-        ]
-        self.neighbors = unvisited_neighbors
+        # # Filtering visited neighbors
+        # unvisited_neighbors = [
+        #     tuple(neighbor) for neighbor in valid_neighbors
+        #     if tuple(neighbor) not in self.visited
+        # ]
+        # self.neighbors = unvisited_neighbors
 
+        # if not self.neighbors:
+        #     # search through neighbors and find the one with the highest gps 
+        #     # if the agent is trapped with no new neighbors.
+        #     valid_gps_neighbors = [
+        #         gps[neighbor[0], neighbor[1]] for neighbor in valid_neighbors
+        #     ]
+        #     max_idx = np.argmax(valid_gps_neighbors)
+        #     self.neighbors = [tuple(valid_neighbors[max_idx])]
+        self.neighbors = list(map(tuple, valid_neighbors))
         self.path.append(Node(new_location, cost))
         self.visited.add(new_location)
 
-        if not self.neighbors:
-            # search through neighbors and find the one with the highest gps 
-            # if the agent is trapped with no new neighbors.
-            valid_gps_neighbors = [
-                gps[neighbor[0], neighbor[1]] for neighbor in valid_neighbors
-            ]
-            max_idx = np.argmax(valid_gps_neighbors)
-            self.neighbors = [tuple(valid_neighbors[max_idx])]
 
 
 class Node:
