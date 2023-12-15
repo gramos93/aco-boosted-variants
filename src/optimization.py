@@ -171,7 +171,8 @@ class BaseACO(iACO):
         #return paths
         return self._optimal_path, None
     
-class MomentumACO(iACO):
+
+class ACOWithMomentumAndVisionUsingDijkstraAlgorithm(iACO):
     def normalize_probs(self, probabilities):
         # normalize probabilities so they sum to 1
         probabilities = np.array(probabilities)
@@ -194,31 +195,53 @@ class MomentumACO(iACO):
             # get neighbors
             neighbors = agent.get_neighbors()
             best_momentum_node = agent.get_best_momentum_node()
+            visions = agent.get_vision(agent.get_location())
             # if agent is ever obtaining a path cost worse than the optimal path, send home
             if agent.path_cost() > self._optimal_cost:
                 agent.send_home()
                 break
-            # get pheromone values
+
+            # get vision pheromone values
+            vision_pheromones = [self._pheromone_matrix[vision] for vision in visions]
+            # get vision cost values
+            vision_costs = [self._cost_matrix[vision] * self._gridworld.gps[vision] for vision in visions]
+            # get vision gps
+            vision_gps = [self._gridworld.gps[vision] for vision in visions]
+
+            # get probabilities for each nodes in vision
+            vision_probabilities = [pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(vision_pheromones, vision_costs, vision_gps)]
+            vision_probabilities = self.normalize_probs(vision_probabilities)
+            
+            vision_next_location = visions[np.argmax(vision_probabilities)]
+
+            node = agent.find_best_path_to_location(vision_next_location, visions, vision_probabilities, self._cost_matrix)
+
+            vision_node = node[0] if len(node) == 1 else node[1]
+
+            # get pheromoes values
             pheromones = [self._pheromone_matrix[neighbor] for neighbor in neighbors]
             # get cost values
             costs = [self._cost_matrix[neighbor] * self._gridworld.gps[neighbor] for neighbor in neighbors]
+            # get gps values
             gps = [self._gridworld.gps[neighbor] for neighbor in neighbors]
-            ##denom = np.sum([pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]) + 1e-6
-            #denom=1
+
             probabilities = [pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]
 
             for i in range(len(neighbors)):
+                if (neighbors[i] == vision_node):
+                    probabilities[i] *= 3
                 if (neighbors[i] == best_momentum_node):
-                    probabilities[i] *= 2
+                    probabilities[i] *= 1.5
 
             probabilities = self.normalize_probs(probabilities)
 
             # choose next location
-            choice = list(range(len(neighbors)))
+            choice = list(range(len(probabilities)))
             if len(choice) == 0:
                 return
             next_location = np.random.choice(choice, p=probabilities)
             next_location = neighbors[next_location]
+
             # update agent
             agent.update(next_location, self._cost_matrix, self._gridworld.gps)
             # check if target is within vision range

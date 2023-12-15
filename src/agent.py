@@ -1,4 +1,5 @@
 import numpy as np
+import heapq
 
 class Agent:
     def __init__(self, idx, visibility, color, size):
@@ -58,6 +59,69 @@ class Agent:
         momentum_best_node = (self.current_location[0]-last_visited[0]+self.current_location[0], self.current_location[1]-last_visited[1]+self.current_location[1]) if last_visited != None else None
 
         return momentum_best_node
+    
+    def find_best_path_to_location(self, destination, all_nodes, probability, cost_matrix):
+        probability = np.append(probability, 1)
+        all_nodes.append(self.current_location)
+
+        # create graph
+        graph = {}
+        for vision in all_nodes:
+            all_adjacent_nodes = []
+            nodes = {}
+            for i, j in [(0,1), (0,-1), (1,0), (-1,0)]:
+                if 0 <= vision[0]+i < self.size and 0 <= vision[1]+j < self.size and cost_matrix[vision[0]+i, vision[1]+j] != -1:
+                    all_adjacent_nodes.append((vision[0]+i, vision[1]+j))
+            for adjacent_node in all_nodes:
+                if adjacent_node in all_adjacent_nodes:
+                    nodes[adjacent_node] = 1/probability[all_nodes.index(adjacent_node)]
+            graph[vision] = nodes
+
+        start = self.current_location 
+
+        # Initialize distances with infinity for all nodes except the start node
+        distances = {node: float('infinity') for node in graph}
+        distances[start] = 0
+
+        # Priority queue to keep track of the next node to visit
+        priority_queue = [(0, start)]
+
+        # Dictionary to store the shortest path to each node
+        previous_nodes = {node: None for node in graph}
+
+        while priority_queue:
+            current_distance, current_node = heapq.heappop(priority_queue)
+
+            # Stop the algorithm if the destination node is reached
+            if current_node == destination:
+                break
+
+            # Skip if we have already processed this node with a shorter path
+            if current_distance > distances[current_node]:
+                continue
+
+            # Update distances for neighbors
+            for neighbor, weight in graph[current_node].items():
+                distance = current_distance + weight
+
+                # If a shorter path is found, update the distance and enqueue the neighbor
+                if distance < distances[neighbor]:
+                    distances[neighbor] = distance
+                    previous_nodes[neighbor] = current_node
+                    heapq.heappush(priority_queue, (distance, neighbor))
+
+        # Reconstruct the shortest path
+        path = []
+        current = destination
+        while previous_nodes[current] is not None:
+            path.insert(0, current)
+            current = previous_nodes[current]
+
+        # Include the start node in the path
+        path.insert(0, start)
+
+        return path
+
 
     def get_neighbors(self):
         return self.neighbors
