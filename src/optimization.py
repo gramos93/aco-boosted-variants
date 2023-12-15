@@ -196,6 +196,9 @@ class ACOWithMomentumAndVisionUsingDijkstraAlgorithm(iACO):
             neighbors = agent.get_neighbors()
             best_momentum_node = agent.get_best_momentum_node()
             visions = agent.get_vision(agent.get_location())
+            for node in visions:
+                if self._cost_matrix[node] == -1:
+                    visions.remove(node)
             # if agent is ever obtaining a path cost worse than the optimal path, send home
             if agent.path_cost() > self._optimal_cost:
                 agent.send_home()
