@@ -1,4 +1,0 @@
-MAP SIZE,AVG nb step,Avg path cost,Min path cost,Max path cost,Min nb step,Max nb step,Nb of fails
-32,255.4,84.0,66.0,99.0,106,410,0
-64,652.0,575.0,167.0,893.0,452,849,0
-96,1835.8,666.4,266.0,2174.0,520,2433,0

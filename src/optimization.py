@@ -305,16 +305,16 @@ class RubberBallACO(iACO):
         solution=None
         while True:
             # pick next best move for each agent
-            if count<0.1*self.max_count:
-                self.move_agents_rubber_ball(self.alpha, self.beta, self.zeta, self.gamma)
-            else:
-                if count%1000<self._gridworld.size:
-                    self.move_agents(self.alpha, self.beta, self.zeta, self.gamma)
-                else:
-                    self.move_agents_rubber_ball(self.alpha, self.beta, self.zeta, self.gamma)
+            # if count<0.1*self.max_count:
+            self.move_agents_rubber_ball(self.alpha, self.beta, self.zeta, self.gamma)
+            # else:
+            #     if count%1000<self._gridworld.size:
+            #         self.move_agents(self.alpha, self.beta, self.zeta, self.gamma)
+            #     else:
+            #         self.move_agents_rubber_ball(self.alpha, self.beta, self.zeta, self.gamma)
 
             # update pheromone matrix
-            self.agent_pheromone_update(self.rho, self.delta)
+            # self.agent_pheromone_update(self.rho, self.delta)
 
             if (count % 10 == 0 or self.solution_flag) and self.display:
                 self.view.display(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix)

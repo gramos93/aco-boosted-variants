@@ -47,7 +47,7 @@ def run():
             delta = 0.0           # controls the importance of exploratory pheromones
             rho = 0.0000001       # evaporation rate
 
-            search = Search(FelixACO(gridworld, alpha, beta, gamma, delta, zeta, rho,max_count,display=False)) # CHANGE ALGO HERE
+            search = Search(RubberBallACO(gridworld, alpha, beta, gamma, delta, zeta, rho,max_count,display=False)) # CHANGE ALGO HERE
 
             # Run simulation
             solution,_ = search.solve()
@@ -74,5 +74,5 @@ def post_processing():
                 writer.writerow([mapsize, np.mean(counts),np.mean(costs),np.min(costs),np.max(costs),np.min(counts),np.max(counts),int(np.sum(fails))])
 
 if __name__ == '__main__':
-    # run()
+    run()
     post_processing()
