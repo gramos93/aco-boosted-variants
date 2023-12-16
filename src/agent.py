@@ -13,6 +13,9 @@ class Agent:
         self.visited = set()
         self.visibility = visibility
 
+    def get_location(self):
+        return self.current_location
+
     def send_home(self):
         self.current_location = (0,0)
         self.current_cost = 1
@@ -20,12 +23,13 @@ class Agent:
         self.neighbors = [(0,1), (1,0)]
         self.visited = set()
 
-    def update(self, new_location, cost, gps):
+    def update(self, new_location, cost_matrix, gps):
+        cost = cost_matrix[new_location]
         self.current_location = new_location
         self.current_cost += cost
         self.neighbors = []
         for i, j in [(0,1), (0,-1), (1,0), (-1,0)]:
-            if 0 <= new_location[0]+i < self.size and 0 <= new_location[1]+j < self.size:
+            if 0 <= new_location[0]+i < self.size and 0 <= new_location[1]+j < self.size and cost_matrix[new_location[0]+i, new_location[1]+j] != -1:
                 if (new_location[0]+i, new_location[1]+j) not in self.visited:
                     self.neighbors.append((new_location[0]+i, new_location[1]+j))
                     self.frontier.append((new_location[0]+i, new_location[1]+j))
@@ -37,7 +41,7 @@ class Agent:
         if self.neighbors == []:
             # search through neighbors and find the one with highest gps if agent trapped with no new neighbors
             for i, j in [(0,1), (0,-1), (1,0), (-1,0)]:
-                if 0 <= new_location[0]+i < self.size and 0 <= new_location[1]+j < self.size:
+                if 0 <= new_location[0]+i < self.size and 0 <= new_location[1]+j < self.size and cost_matrix[new_location[0]+i, new_location[1]+j] != -1:
                     self.neighbors.append((new_location[0]+i, new_location[1]+j))
             gps_neighbors = [gps[n[0], n[1]] for n in self.neighbors]
             max_idx = np.argmax(gps_neighbors)
