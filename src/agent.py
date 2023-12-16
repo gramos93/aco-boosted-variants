@@ -97,7 +97,7 @@ class SpittingAgent(Agent):
             np.random.uniform(low=0, high=1.0, size=2)
         )
         self._residual_direction = self._desired_direction.copy()
-        self.decisiveness = 0.2
+        self.decisiveness = 0.3
         self.current_location = (0, 0)
 
     def normalize(self, vector):
@@ -127,9 +127,9 @@ class SpittingAgent(Agent):
         self.current_location = new_location
         self.current_cost += cost
 
-        if self._check_for_edge(self.current_location):
-            self._desired_direction = self._reflect(self._desired_direction)
-            self._residual_direction = self._desired_direction.copy()
+        # if self._check_for_edge(self.current_location):
+        #     self._desired_direction = self._reflect(self._desired_direction)
+        #     self._residual_direction = self._desired_direction.copy()
 
         # Defining neighbor positions using array operations
         neighbor_positions = np.array([(0, 1), (0, -1), (1, 0), (-1, 0)])
@@ -152,7 +152,7 @@ class SpittingAgent(Agent):
         # Filtering visited neighbors
         unvisited_neighbors = [
             tuple(neighbor) for neighbor in valid_neighbors
-            if tuple(neighbor) not in self.visited[-20:]
+            if tuple(neighbor) not in self.visited
         ]
         self.neighbors = unvisited_neighbors
 

@@ -13,19 +13,19 @@ def run():
         'agent_type': SpittingAgent,
         'visibility': 2,
         'targets': [(90,90)],
-        'seed': 71, #73, 81, 89
+        'seed': 89, #73, 81, 89
         'num_obstacle': 10,
         'max_obstacle_size': 20,
     }
     gridworld = GridWorld(config)
 
 
-    alpha = 50.0         # controls the importance of pheromone
-    beta = 2.0         # controls the importance of cost
-    zeta = 120.0           # controls the importance of gps signal
-    gamma = 2.0        # controls the importance of optimal path pheromones
+    alpha = 20.0         # controls the importance of pheromone
+    beta = 1.0         # controls the importance of cost
+    zeta = 100.0           # controls the importance of gps signal
+    gamma = 1.0        # controls the importance of optimal path pheromones
     delta = 1.0           # controls the importance of exploratory pheromones
-    rho = 1E-6        # evaporation rate
+    rho = 5E-8        # evaporation rate
 
     search = Search(SpittingAnts(gridworld, alpha, beta, gamma, delta, zeta, rho))
             

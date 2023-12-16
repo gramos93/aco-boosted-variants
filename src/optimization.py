@@ -1,4 +1,6 @@
 import numpy as np
+from numpy.lib.stride_tricks import as_strided
+
 from gridworld import GridWorld
 from abc import ABC, abstractmethod
 from typing import List
@@ -222,13 +224,14 @@ class SpittingAnts(BaseACO):
         if (agent._residual_direction == 0).all():
             agent._residual_direction = agent._desired_direction
         # adjust desired direction slightly  at randomly
-        wonder_factor = np.random.uniform(low=-1, high=1, size=2)
+        # wonder_factor = np.random.uniform(low=-1, high=1, size=2)
+        wonder_factor = agent._reflect(agent._desired_direction.copy(), np.random.randint(-20, 20))
         pheromone_factor = np.array(neighbourhood[np.argmax(probabilities)]) - agent.current_location
         adjusted_direction = (
-            agent._desired_direction + agent.decisiveness *
+            agent._desired_direction + 
             (pheromone_factor * agent.decisiveness + wonder_factor * (1-agent.decisiveness))
         )
-        agent.decisiveness = np.clip(agent.decisiveness / 0.999, 0.1, 0.8)
+        agent.decisiveness = np.clip(agent.decisiveness / 0.999, 0.1, 0.9)
         agent._desired_direction = agent.normalize(adjusted_direction)
         return move
 
@@ -269,6 +272,39 @@ class SpittingAnts(BaseACO):
                     # send agent home
                     agent.send_home()
 
+    def spit_pheromone(self, A, kernel_size=3, stride=1, padding=0, pool_mode='avg'):
+        '''
+        2D Pooling
+
+        Parameters:
+            A: input 2D array
+            kernel_size: int, the size of the window over which we take pool
+            stride: int, the stride of the window
+            padding: int, implicit zero paddings on both sides of the input
+            pool_mode: string, 'max' or 'avg'
+        '''
+        h, w = A.shape
+        assert h==w, "The height and width of the input should be the same"
+        padding = int(((stride - 1) * w - stride + kernel_size)/2)
+
+        # Padding
+        A = np.pad(A, padding, mode='constant')
+
+        # Window view of A
+        output_shape = ((A.shape[0] - kernel_size) // stride + 1,
+                        (A.shape[1] - kernel_size) // stride + 1)
+
+        shape_w = (output_shape[0], output_shape[1], kernel_size, kernel_size)
+        strides_w = (stride*A.strides[0], stride*A.strides[1], A.strides[0], A.strides[1])
+
+        A_w = as_strided(A, shape_w, strides_w)
+
+        # Return the result of pooling
+        if pool_mode == 'max':
+            return A_w.max(axis=(2, 3))
+        elif pool_mode == 'avg':
+            return A_w.mean(axis=(2, 3))
+
     def solve(self):
         count = 0
         ##while not all(self.found):
@@ -279,8 +315,8 @@ class SpittingAnts(BaseACO):
                 # update pheromone matrix
                 # self.agent_pheromone_update(self.rho, self.delta)
                 self._pheromone_matrix *= 1.0 - self.rho
+                self._pheromone_matrix = self.spit_pheromone(self._pheromone_matrix)
                 self._pheromone_matrix[self._pheromone_matrix < 1] = 1.0
-
                 if count % 10 == 0 or self.solution_flag:
                     self.solution_flag = False
                 self.view.display(
@@ -292,7 +328,7 @@ class SpittingAnts(BaseACO):
                     # self.view.display_ants(self._gridworld)
 
                 count += 1
-                if count > 100000:
+                if count > 10000:
                     break
         except KeyboardInterrupt:
             pass
