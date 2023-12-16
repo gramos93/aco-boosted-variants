@@ -174,7 +174,7 @@ class BaseACO(iACO):
         #return paths
         return self._optimal_path, None
     
-class HybridACO(iACO):
+class CollaborativeAnnealingACO(iACO):
     def normalize_probs(self, probabilities):
         # normalize probabilities so they sum to 1
         probabilities = np.array(probabilities)

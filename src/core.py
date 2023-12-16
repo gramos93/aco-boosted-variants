@@ -1,6 +1,6 @@
 from view import View
 from gridworld import GridWorld
-from optimization import Search, BaseACO, HybridACO
+from optimization import Search, BaseACO, CollaborativeAnnealingACO
 
 def run():
 
@@ -26,7 +26,7 @@ def run():
     delta = 0.0           # controls the importance of exploratory pheromones
     rho = 0.000001       # evaporation rate 0.0000001 
 
-    search = Search(HybridACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+    search = Search(CollaborativeAnnealingACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
             
     # Run simulation
 
