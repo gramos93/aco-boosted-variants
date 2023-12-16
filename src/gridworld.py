@@ -16,7 +16,7 @@ class GridWorld:
             'trees': 3,
             'dirt': 4,
             'target': 5,
-            'hard_obstacle': 6,
+            'hard_obstacle': 7,
         }
         self.cost_map = {
             1: 1,
@@ -24,7 +24,7 @@ class GridWorld:
             3: 5,
             4: 2,
             5: 1,
-            6: -1
+            7: -1
         }
         self.agents = []
         self.grid = self.initialize_world()
@@ -58,7 +58,7 @@ class GridWorld:
         width=np.random.randint(1,self.max_obstacle_size)
         height=np.random.randint(1,self.max_obstacle_size)
         pos_x=np.random.randint(width,self.size-width)
-        pos_y=np.random.randint(height,self.size-height)
+        pos_y=np.random.randint(height,self.size-height-5)
         return pos_x,pos_y,width,height
 
     def initialize_world(self):

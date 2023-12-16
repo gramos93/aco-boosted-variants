@@ -1,7 +1,7 @@
 from view import View
 from agent import Agent
 from gridworld import GridWorld
-from optimization import Search, BaseACO
+from optimization import Search, BaseACO,FelixACO
 
 def run():
 
@@ -13,7 +13,7 @@ def run():
         'agent_type': Agent,
         'visibility': 2,
         'targets': [(90,90)],
-        'seed': 71, #73, 81, 89
+        'seed': 71,#73, 81, 89
         'num_obstacle': 32,
         'max_obstacle_size': 20,
     }
@@ -28,11 +28,11 @@ def run():
     delta = 0.0           # controls the importance of exploratory pheromones
     rho = 0.0000001       # evaporation rate
 
-    search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+    search = Search(FelixACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
 
     # Run simulation
 
-    result, metrics = search.solve()
+    result, metrics = search.solve() 
 
     # Log metrics
 

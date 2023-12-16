@@ -12,6 +12,8 @@ class Agent:
         self.size = size
         self.visited = set()
         self.visibility = visibility
+        _directions=[(0,1), (0,-1), (1,0), (-1,0)]
+        self.direction=_directions[np.random.randint(0,4)]
 
     def send_home(self):
         self.current_location = (0,0)
@@ -107,7 +109,8 @@ class Node:
         return f'Node at {self.location}'
     
     def __eq__(self, other):
-        return self.location == other.location
+        return self.location == other
+        # return self.location == other.location
     
     def __hash__(self):
         return hash(self.location)

@@ -10,6 +10,7 @@ class View:
             4: [161, 120, 32],  # dirt
             5: [0, 0, 255], # target
             6: [0, 0, 255], # solution_path
+            7: [0, 255, 255], # hard obstacle
         }
 
     def __enter__(self):
@@ -32,7 +33,7 @@ class View:
 
         for agent in agents:
             path = agent.get_path()
-            for node in path[-2:]:
+            for node in path[-15:]:
                 image[node.i, node.j] = agent.color
 
         # rescale pheremone matrix to be between 0 and 1
@@ -46,16 +47,16 @@ class View:
         plt.rcParams.update({'font.size': 8})
         plt.ion()
         plt.clf()
-        plt.subplot(1,4,1)
+        plt.subplot(2,2,1)
         plt.imshow(image)
         plt.title('Gridworld')
-        plt.subplot(1,4,2)
+        plt.subplot(2,2,2)
         plt.imshow(pheremone_matrix)
         plt.title('Pheromone')
-        plt.subplot(1,4,3)
+        plt.subplot(2,2,3)
         plt.imshow(gridworld.gps)
         plt.title('GPS')
-        plt.subplot(1,4,4)
+        plt.subplot(2,2,4)
         plt.title('Adjusted Cost')
         plt.imshow(cost_matrix)
         plt.show()
