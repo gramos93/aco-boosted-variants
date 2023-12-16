@@ -1,6 +1,6 @@
 from agent import Agent
 from gridworld import GridWorld
-from optimization import Search, BaseACO,FelixACO
+from optimization import Search, BaseACO,RubberBallACO
 import numpy as np
 import json
 import csv

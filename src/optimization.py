@@ -51,6 +51,7 @@ class iACO(ABC):
     def move_agents(self, alpha, beta):
         pass
 
+
     @abstractmethod
     def agent_pheromone_update(self):
         pass
@@ -172,7 +173,7 @@ class BaseACO(iACO):
         #return paths
         return self._optimal_path, None
 
-class FelixACO(iACO):
+class RubberBallACO(iACO):
     def __init__(self, gridworld, alpha, beta, gamma, delta, zeta, rho, max_count=5000, display=True) -> None:
         super().__init__(gridworld, alpha, beta, gamma, delta, zeta, rho)
         self.anti_pheromone_matrix= np.zeros_like(self._cost_matrix).astype(np.float32)
@@ -197,34 +198,17 @@ class FelixACO(iACO):
         self._pheromone_matrix[agent.current_location] += self.path_cost(agent, delta)
 
 
-    def move_agents(self, alpha, beta, zeta, gamma):
-        ###TODO : Cleanup this section
+    def move_agents_rubber_ball(self, alpha, beta, zeta, gamma):
         # choose next location for each agent
         for agent in self._agents:
-            # get neighbors
-            neighbors = agent.get_neighbors()
-            # if agent is ever obtaining a path cost worse than the optimal path, send home
+            # if agent is ever obtaining a path cost worse than the twice optimal path, send home
             if agent.path_cost() > self._optimal_cost:
                 agent.send_home()
-                break
 
-            # get pheromone values
-            pheromones = [self._pheromone_matrix[neighbor] for neighbor in neighbors]
-            anti_pheromones = [self.anti_pheromone_matrix[neighbor] for neighbor in neighbors]
-            
-            # get cost values
-            costs = [self._cost_matrix[neighbor] * self._gridworld.gps[neighbor] for neighbor in neighbors]
-            gps = [self._gridworld.gps[neighbor] for neighbor in neighbors]
-
-            probabilities = [(pheromone-anti_pheromone)*alpha * (1/cost)*beta + signal*zeta for pheromone,anti_pheromone, cost, signal in zip(pheromones,anti_pheromones, costs, gps)]
-
-            probabilities = self.normalize_probs(probabilities)
-            if np.isnan(probabilities.sum()):
-                agent.send_home()
-                break
             if np.random.rand()<=0.1:
                 agent.direction=self._directions[np.random.randint(0,4)]
 
+            # choose next location
             next_pos=(agent.get_location()[0]+agent.direction[0],agent.get_location()[1]+agent.direction[1])
             while is_obstacle(self._gridworld,next_pos):
                 new_dir=self._directions[np.random.randint(0,4)]
@@ -232,36 +216,16 @@ class FelixACO(iACO):
                     agent.direction=self._directions[np.random.randint(0,4)]
                 next_pos=(agent.get_location()[0]+agent.direction[0],agent.get_location()[1]+agent.direction[1])
 
-
-            # choose next location
-            choice = list(range(len(neighbors)))
-            
-            if len(choice) == 0:
-                return
             next_location = next_pos
             if next_location in agent.visited:
                 #Cuts path, keeps beginning to first encounter of that path
                 agent.path=agent.path[0:agent.path.index(next_location)+1]
                 agent.visited=set(agent.path)
 
-            # next_location = np.random.choice(choice, p=probabilities)
-            # while next_location in agent.visited:
-            #     next_location = np.random.choice(choice, p=probabilities)
-            # print(neighbors)
-            # next_location = neighbors[next_location]
-            # update agent
-
             agent.update(next_location, self._cost_matrix, self._gridworld.gps)
             # check if target is within vision range
             vision = agent.get_vision(next_location)
 
-            # if len(agent.get_path())>=50:
-            #     if agent.get_location() in agent.get_path()[-4:-2]:
-            #         self.anti_pheromone_matrix[agent.get_location()]=0.3
-            #         agent.send_home()
-            #         break
-                    
-            
             for loc in vision:
                 if loc in self._targets:
                     # update found first False to True
@@ -280,6 +244,55 @@ class FelixACO(iACO):
                         # send agent home
                         agent.send_home()
                         break
+                    
+    def move_agents(self, alpha, beta, zeta, gamma):
+        # choose next location for each agent
+        for agent in self._agents:
+            # get neighbors
+            neighbors = agent.get_neighbors()
+            # if agent is ever obtaining a path cost worse than the optimal path, send home
+            if agent.path_cost() > 2*self._optimal_cost:
+                agent.send_home()
+                break
+            # get pheromone values
+            pheromones = [self._pheromone_matrix[neighbor] for neighbor in neighbors]
+            # get cost values
+            costs = [self._cost_matrix[neighbor] * self._gridworld.gps[neighbor] for neighbor in neighbors]
+            gps = [self._gridworld.gps[neighbor] for neighbor in neighbors]
+
+            probabilities = [pheromone**alpha * (1/cost)**beta * signal**zeta for pheromone, cost, signal in zip(pheromones, costs, gps)]
+            probabilities = self.normalize_probs(probabilities)
+
+            # choose next location
+            choice = list(range(len(neighbors)))
+            if len(choice) == 0:
+                return
+            next_location = np.random.choice(choice, p=probabilities)
+            next_location = neighbors[next_location]
+
+            # update agent
+            agent.update(next_location, self._cost_matrix, self._gridworld.gps)
+            # check if target is within vision range
+            vision = agent.get_vision(next_location)
+            for loc in vision:
+                if loc in self._targets:
+                    # update found first False to True
+                    self.found[self._targets.index(loc)] = True
+                    # optimal path check
+                    if agent.path_cost() < self._optimal_cost:
+                        self.solution_flag = True
+                        self._optimal_cost = agent.path_cost()
+                        self._optimal_path = agent.get_path()
+                        # update pheromone matrix with optimal path
+                        for i in range(len(self._optimal_path)):
+                            node = self._optimal_path[-i]
+                            self._pheromone_matrix[node.location] += self.path_cost(agent, delta=1.0) * gamma
+                            # diminish gamma slightly
+                            gamma *= 0.99
+                        # send agent home
+                        agent.send_home()
+                        break
+                    
     
     def agent_pheromone_update(self, rho, delta):
         # update pheromone matrix
@@ -292,7 +305,14 @@ class FelixACO(iACO):
         solution=None
         while True:
             # pick next best move for each agent
-            self.move_agents(self.alpha, self.beta, self.zeta, self.gamma)
+            if count<0.1*self.max_count:
+                self.move_agents_rubber_ball(self.alpha, self.beta, self.zeta, self.gamma)
+            else:
+                if count%1000<self._gridworld.size:
+                    self.move_agents(self.alpha, self.beta, self.zeta, self.gamma)
+                else:
+                    self.move_agents_rubber_ball(self.alpha, self.beta, self.zeta, self.gamma)
+
             # update pheromone matrix
             self.agent_pheromone_update(self.rho, self.delta)
 

@@ -1,7 +1,7 @@
 from view import View
 from agent import Agent
 from gridworld import GridWorld
-from optimization import Search, BaseACO,FelixACO
+from optimization import Search, BaseACO,RubberBallACO
 
 def run():
 
@@ -28,7 +28,7 @@ def run():
     delta = 0.0           # controls the importance of exploratory pheromones
     rho = 0.0000001       # evaporation rate
 
-    search = Search(FelixACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+    search = Search(RubberBallACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
 
     # Run simulation
 
