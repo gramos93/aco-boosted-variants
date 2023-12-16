@@ -1,7 +1,7 @@
 from view import View
 from agent import Agent
 from gridworld import GridWorld
-from optimization import Search, BaseACO, CollaborativeAnnealingACO
+from optimization import Search, BaseACO, CollaborativeAnnealingACO, ACOWithMomentumAndVisionUsingDijkstraAlgorithm
 
 def run():
 
@@ -28,7 +28,7 @@ def run():
     delta = 0.0           # controls the importance of exploratory pheromones
     rho = 0.0000001       # evaporation rate
 
-    search = Search(CollaborativeAnnealingACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+    search = Search(ACOWithMomentumAndVisionUsingDijkstraAlgorithm(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
 
     # Run simulation
 
