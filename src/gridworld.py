@@ -9,18 +9,22 @@ class GridWorld:
         self.target_locations = config['targets']
         self.num_agents = config['num_agents']
         self.targets = config['targets']
+        self.max_obstacle_size=config['max_obstacle_size']
+        self.num_obstacle=config['num_obstacle']
         self.id_map = {
             'water': 2,
             'trees': 3,
             'dirt': 4,
             'target': 5,
+            'hard_obstacle': 6,
         }
         self.cost_map = {
             1: 1,
             2: 100,
             3: 5,
             4: 2,
-            5: 1
+            5: 1,
+            6: -1
         }
         self.agents = []
         self.grid = self.initialize_world()
@@ -49,6 +53,13 @@ class GridWorld:
         solution = solution.reshape((self.size, self.size)).astype(np.int32)
         self.grid[solution == 1] = self.id_map['path']
         return
+    
+    def generate_hard_obstacle(self):        
+        width=np.random.randint(1,self.max_obstacle_size)
+        height=np.random.randint(1,self.max_obstacle_size)
+        pos_x=np.random.randint(width,self.size-width)
+        pos_y=np.random.randint(height,self.size-height)
+        return pos_x,pos_y,width,height           
 
     def initialize_world(self):
         grid = np.ones((self.size, self.size), dtype=np.int32)
@@ -64,6 +75,10 @@ class GridWorld:
 
         mask = (grid == 1) * (np.random.rand(self.size, self.size) < 0.05)
         grid[mask] = self.id_map['dirt']
+
+        for _ in range(self.num_obstacle):
+            pos_x,pos_y,width,height=self.generate_hard_obstacle()
+            grid[pos_x:pos_x+width,pos_y:pos_y+height]=self.id_map['hard_obstacle']
 
         # Targets
         for t in self.target_locations:
