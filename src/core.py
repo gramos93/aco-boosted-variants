@@ -1,17 +1,19 @@
 from view import View
 from gridworld import GridWorld
-from optimization import Search, BaseACO
+from optimization import Search, BaseACO, HybridACO
 
 def run():
 
     # Initialize GridWorld: edit config to alter problem
 
     config = {
-        'dim': 96,
+        'dim': 64,
         'num_agents': 50,
-        'visibility': 2,
-        'targets': [(90,90)],
-        'seed': 71, #73, 81, 89
+        'visibility': 3,
+        'targets': [(60,60)],
+        'seed': 89, #73, 81, 89, 71
+        'num_obstacle': 10,
+        'max_obstacle_size': 10,
     }
     gridworld = GridWorld(config)
 
@@ -22,9 +24,9 @@ def run():
     zeta = 20.0           # controls the importance of gps signal
     gamma = 1000.0        # controls the importance of optimal path pheromones
     delta = 0.0           # controls the importance of exploratory pheromones
-    rho = 0.0000001       # evaporation rate
+    rho = 0.000001       # evaporation rate 0.0000001 
 
-    search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+    search = Search(HybridACO(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
             
     # Run simulation
 
@@ -33,8 +35,8 @@ def run():
     # Log metrics
     
     # hang until space, then close program
-    input('Press enter to exit')
-    exit()
+    #input('Press enter to exit')
+    #exit()
 
 if __name__ == '__main__':
     run()
