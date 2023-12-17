@@ -1,4 +1,4 @@
-from agent import Agent
+from agent import Agent, SpittingAgent
 from gridworld import GridWorld
 from optimization import Search, BaseACO, CollaborativeAnnealingACO, ACOWithMomentumAndVisionUsingDijkstraAlgorithm, RubberBallACO, SpittingAnts
 import numpy as np
@@ -6,10 +6,7 @@ import json
 import csv
 import os
 
-file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results.json'
-file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats.csv'
-
-def run():
+def run(file_path_json, file_path_csv, agent_type, algorithm):
     all_solution={}
     #Seeds
     seeds=[71, 81]#[61, 74, 81, 89, 100]
@@ -19,7 +16,7 @@ def run():
     obs_size=[4,8,12,16,32]
     
     #Number of max iteration
-    count=[1000,1000,1000,1000,1000]
+    count=[6000,6000,6000,6000,6000]
 
     targets=[(30,30),(60,60),(90,90),(120,120),(240,240)]
 
@@ -37,7 +34,7 @@ def run():
             config = {
                 'dim': dim,
                 'num_agents': 50,
-                'agent_type': Agent,
+                'agent_type': agent_type,
                 'visibility': 3,
                 'targets': [targets[id]],##[(dim-np.random.randint(1,(id+2)*2),dim-np.random.randint(1,(id+2)*2))],
                 'seed': seed,
@@ -55,7 +52,7 @@ def run():
             delta = 0.0           # controls the importance of exploratory pheromones
             rho = 0.0000001       # evaporation rate
 
-            search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho,max_count,display=False)) # CHANGE ALGO HERE
+            search = Search(algorithm(gridworld, alpha, beta, gamma, delta, zeta, rho,max_count,display=False)) # CHANGE ALGO HERE
 
             # Run simulation
             solution,_ = search.solve()
@@ -66,7 +63,7 @@ def run():
             with open(file_path_json, "w") as outfile: 
                 json.dump(all_solution, outfile, indent = 4)
 
-def post_processing():
+def post_processing(file_path_json, file_path_csv):
     with open(file_path_csv, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["MAP SIZE", "AVG nb step", "Avg path cost", "Min path cost","Max path cost","Min nb step", "Max nb step", "Nb of fails"])
@@ -82,5 +79,23 @@ def post_processing():
                 writer.writerow([mapsize, np.mean(counts),np.mean(costs),np.min(costs),np.max(costs),np.min(counts),np.max(counts),int(np.sum(fails))])
 
 if __name__ == '__main__':
-    run()
-    post_processing()
+    file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_BaseACO.json'
+    file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_BaseACO.csv'
+    run(file_path_json, file_path_csv, Agent, BaseACO)
+    post_processing(file_path_json, file_path_csv)
+    file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_CollaborativeAnnealing.json'
+    file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_CollaborativeAnnealing.csv'
+    run(file_path_json, file_path_csv, Agent, CollaborativeAnnealingACO)
+    post_processing(file_path_json, file_path_csv)
+    file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_MomentumD.json'
+    file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_MomentumD.csv'
+    run(file_path_json, file_path_csv, Agent, ACOWithMomentumAndVisionUsingDijkstraAlgorithm)
+    post_processing(file_path_json, file_path_csv)
+    file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_Ball.json'
+    file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_Ball.csv'
+    run(file_path_json, file_path_csv, Agent, RubberBallACO)
+    post_processing(file_path_json, file_path_csv)
+    file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_SpittingAnts.json'
+    file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_SpittingAnts.csv'
+    run(file_path_json, file_path_csv, SpittingAgent, SpittingAnts)
+    post_processing(file_path_json, file_path_csv)
