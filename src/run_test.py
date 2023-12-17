@@ -15,6 +15,8 @@ def run():
     seeds=[71, 81]#[61, 74, 81, 89, 100]
     #Map sizes
     dims=[32, 64, 96, 128, 256]
+
+    obs_size=[4,8,12,16,32]
     
     #Number of max iteration
     count=[1000,5000,8000,8000,8000]
@@ -40,7 +42,7 @@ def run():
                 'targets': [targets[id]],##[(dim-np.random.randint(1,(id+2)*2),dim-np.random.randint(1,(id+2)*2))],
                 'seed': seed,
                 'num_obstacle': 32,
-                'max_obstacle_size': int((id+4)*(id+1)),
+                'max_obstacle_size': obs_size[id]#int((id+4)*(id+1)),
             }
             gridworld = GridWorld(config)
 

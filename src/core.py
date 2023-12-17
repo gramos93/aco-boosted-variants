@@ -7,16 +7,17 @@ from optimization import Search, BaseACO, CollaborativeAnnealingACO, ACOWithMome
 def run():
 
     # Initialize GridWorld: edit config to alter problem
+    
 
     config = {
-        'dim': 96,
+        'dim': 256,
         'num_agents': 50,
         'agent_type': SpittingAgent, #Agent
         'visibility': 3,
-        'targets': [(90,90)],
+        'targets': [(240,240)],
         'seed': 81, #73, 81, 89
         'num_obstacle': 32,
-        'max_obstacle_size': 20,
+        'max_obstacle_size': 32,
     }
     gridworld = GridWorld(config)
 
