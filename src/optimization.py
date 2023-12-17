@@ -180,8 +180,8 @@ class BaseACO(iACO):
         #paths = reconstruct_paths()
         #return paths
         #convert to list of tuples
-        optimal_path_coords = [node.location for node in self._optimal_path]
-        return optimal_path_coords, None
+        solution=(count,self._optimal_cost) 
+        return (solution, None)
 
 class CollaborativeAnnealingACO(iACO):
     def normalize_probs(self, probabilities):
@@ -364,8 +364,8 @@ class CollaborativeAnnealingACO(iACO):
         # calculate path from start to finish
         #paths = reconstruct_paths()
         #return paths
-        optimal_path_coords = [node.location for node in self._optimal_path]
-        return optimal_path_coords, None
+        solution=(count,self._optimal_cost) 
+        return (solution, None)
     
 class ACOWithMomentumAndVisionUsingDijkstraAlgorithm(iACO):
     def normalize_probs(self, probabilities):
@@ -493,8 +493,8 @@ class ACOWithMomentumAndVisionUsingDijkstraAlgorithm(iACO):
         # calculate path from start to finish
         #paths = reconstruct_paths()
         #return paths
-        optimal_path_coords = [node.location for node in self._optimal_path]
-        return optimal_path_coords, None
+        solution=(count,self._optimal_cost) 
+        return (solution, None)
     
 class RubberBallACO(iACO):
     def __init__(self, gridworld, alpha, beta, gamma, delta, zeta, rho, max_count=5000, display=True) -> None:
@@ -826,5 +826,5 @@ class SpittingAnts(BaseACO):
         else:
             print(f"No solution found in {count} iterations.")
 
-        optimal_path_coords = [node.location for node in self._optimal_path]
-        return optimal_path_coords, None
+        solution=(count,self._optimal_cost) 
+        return (solution, None)
