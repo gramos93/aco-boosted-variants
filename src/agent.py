@@ -13,6 +13,8 @@ class Agent:
         self.size = size
         self.visited = set()
         self.visibility = visibility
+        _directions=[(0,1), (0,-1), (1,0), (-1,0)]
+        self.direction=_directions[np.random.randint(0,4)]
 
     def send_home(self):
         self.current_location = (0,0)
@@ -146,6 +148,84 @@ class Agent:
     def __eq__(self, other):
         return self.idx == other.idx
     
+class SpittingAgent(Agent):
+    def __init__(self, idx, visibility, color, size):
+        super().__init__(idx, visibility, color, size)
+        self._desired_direction = self.normalize(
+            np.random.uniform(low=0, high=1.0, size=2)
+        )
+        self._residual_direction = self._desired_direction.copy()
+        self.decisiveness = 0.3
+        self.current_location = (0, 0)
+
+    def normalize(self, vector):
+        norm = np.linalg.norm(vector)
+        if norm == 0:
+            return vector
+        return vector / norm
+
+    def _check_for_edge(self, location):
+        # Check if agent is at the edge of the grid or obstacle
+        return (
+            location[0] == 0
+            or location[0] == self.size - 1
+            or location[1] == 0
+            or location[1] == self.size - 1
+        )
+    
+    def _reflect(self, vector, angle=-90):
+        vector = vector[::-1]
+        theta = np.radians(angle)
+        c, s = np.cos(theta), np.sin(theta)
+        R = np.array(((c, -s), (s, c)))
+        return R.dot(vector)[::-1]
+
+    def update(self, new_location, cost_matrix, gps):
+        cost = cost_matrix[new_location]
+        self.current_location = new_location
+        self.current_cost += cost
+
+        # if self._check_for_edge(self.current_location):
+        #     self._desired_direction = self._reflect(self._desired_direction)
+        #     self._residual_direction = self._desired_direction.copy()
+
+        # Defining neighbor positions using array operations
+        neighbor_positions = np.array([(0, 1), (0, -1), (1, 0), (-1, 0)])
+        potential_neighbors = neighbor_positions + np.array(new_location)
+        
+        # Filtering valid neighbors based on the grid's boundaries and blocked locations
+        valid_mask = (
+            (potential_neighbors[:, 0] >= 0) &
+            (potential_neighbors[:, 0] < self.size) &
+            (potential_neighbors[:, 1] >= 0) &
+            (potential_neighbors[:, 1] < self.size)
+        )
+        # Get valid neighbors inside the grid
+        valid_neighbors = potential_neighbors[valid_mask]
+        # Filter valid neighbors that are not obstacles
+        valid_neighbors = valid_neighbors[
+            cost_matrix[valid_neighbors[:, 0], valid_neighbors[:, 1]] != -1
+        ]
+        self.neighbors = list(map(tuple, valid_neighbors))
+        # Filtering visited neighbors
+        unvisited_neighbors = [
+            tuple(neighbor) for neighbor in valid_neighbors
+            if tuple(neighbor) not in self.visited
+        ]
+        self.neighbors = unvisited_neighbors
+
+        if not self.neighbors:
+            # search through neighbors and find the one with the highest gps 
+            # if the agent is trapped with no new neighbors.
+            valid_gps_neighbors = [
+                gps[neighbor[0], neighbor[1]] for neighbor in valid_neighbors
+            ]
+            max_idx = np.argmax(valid_gps_neighbors)
+            self.neighbors = [tuple(valid_neighbors[max_idx])]
+        
+        self.path.append(Node(new_location, cost))
+        self.visited.add(new_location)
+    
 class Node:
     def __init__(self, location, cost):
         self.location = location
@@ -176,7 +256,7 @@ class Node:
         return f'Node at {self.location}'
     
     def __eq__(self, other):
-        return self.location == other.location
+        return self.location == other
     
     def __hash__(self):
         return hash(self.location)
