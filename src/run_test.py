@@ -63,6 +63,7 @@ def run(file_path_json, file_path_csv, agent_type, algorithm):
             with open(file_path_json, "w") as outfile: 
                 json.dump(all_solution, outfile, indent = 4)
 
+'''
 def post_processing(file_path_json, file_path_csv):
     with open(file_path_csv, 'w', newline='') as file:
         writer = csv.writer(file)
@@ -77,16 +78,30 @@ def post_processing(file_path_json, file_path_csv):
                 costs=[value[1] for value in data[mapsize].values() if value!=None]
                 fails=[1 for value in data[mapsize].values() if value==None] 
                 writer.writerow([mapsize, np.mean(counts),np.mean(costs),np.min(costs),np.max(costs),np.min(counts),np.max(counts),int(np.sum(fails))])
+'''
+def post_processing(file_path_json, file_path_csv):
+    with open(file_path_csv, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Map", "Map Size", "Path Cost"])
+    with open(file_path_json) as outfile: 
+        data=json.load(outfile) 
+        stats={}
+        for mapsize in data.keys():
+            with open(file_path_csv, 'a', newline='') as file:
+                writer = csv.writer(file)
+                map=data[mapsize]
+                for seed in map.keys():
+                    writer.writerow([seed, mapsize, map[seed][1]])
 
 if __name__ == '__main__':
     file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_BaseACO.json'
     file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_BaseACO.csv'
-    run(file_path_json, file_path_csv, Agent, BaseACO)
-    post_processing(file_path_json, file_path_csv)
+    #run(file_path_json, file_path_csv, Agent, BaseACO)
+    #post_processing(file_path_json, file_path_csv)
     file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_CollaborativeAnnealing.json'
     file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_CollaborativeAnnealing.csv'
-    run(file_path_json, file_path_csv, Agent, CollaborativeAnnealingACO)
-    post_processing(file_path_json, file_path_csv)
+    #run(file_path_json, file_path_csv, Agent, CollaborativeAnnealingACO)
+    #post_processing(file_path_json, file_path_csv)
     file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_MomentumD.json'
     file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_MomentumD.csv'
     run(file_path_json, file_path_csv, Agent, ACOWithMomentumAndVisionUsingDijkstraAlgorithm)
