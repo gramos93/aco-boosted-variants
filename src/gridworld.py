@@ -1,3 +1,8 @@
+'''
+Reference: https://github.com/pvigier/simulopolis-terrain-generator
+'''
+
+
 from agent import Agent
 import numpy as np
 
