@@ -12,9 +12,9 @@ def run():
         'dim': 96,
         'num_agents': 50,
         'agent_type': SpittingAgent, #Agent
-        'visibility': 2,
+        'visibility': 3,
         'targets': [(90,90)],
-        'seed': 71, #73, 81, 89
+        'seed': 81, #73, 81, 89
         'num_obstacle': 32,
         'max_obstacle_size': 20,
     }
@@ -29,7 +29,7 @@ def run():
     delta = 0.0           # controls the importance of exploratory pheromones
     rho = 0.0000001       # evaporation rate
 
-    search = Search(SpittingAnts(gridworld, alpha, beta, gamma, delta, zeta, rho)) # CHANGE ALGO HERE
+    search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho, display=True)) # CHANGE ALGO HERE
 
     # Run simulation
 

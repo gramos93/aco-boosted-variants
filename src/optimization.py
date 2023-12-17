@@ -14,7 +14,9 @@ class iACO(ABC):
                  gamma,    # controls the importance of optimal path pheromones
                  delta,   # controls the importance of exploratory pheromones
                  zeta,
-                 rho) -> None:
+                 rho,
+                 max_count=5000,
+                 display=True) -> None:
         self._gridworld = gridworld
         self._cost_matrix = gridworld.get_cost_matrix()
         self._pheromone_matrix = np.ones_like(self._cost_matrix).astype(np.float32)
@@ -26,6 +28,8 @@ class iACO(ABC):
         self._optimal_path_coords = []
         self._local_points = []
         self._view_local_points = []
+        self.display=display
+        self.max_count=max_count
 
         self.solution_flag = False
         self.view = View()
@@ -162,10 +166,11 @@ class BaseACO(iACO):
 
             if count % 10 == 0 or self.solution_flag:
                 self.solution_flag = False
-                self.view.display(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix)
+                if self.display:
+                    self.view.display(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix)
 
             count += 1
-            if count > 100000:
+            if count > self.max_count:
                 break
 
         print(f'Solution found in {count} iterations.')
@@ -174,7 +179,9 @@ class BaseACO(iACO):
         # calculate path from start to finish
         #paths = reconstruct_paths()
         #return paths
-        return self._optimal_path, None
+        #convert to list of tuples
+        optimal_path_coords = [node.location for node in self._optimal_path]
+        return optimal_path_coords, None
 
 class CollaborativeAnnealingACO(iACO):
     def normalize_probs(self, probabilities):
@@ -342,10 +349,11 @@ class CollaborativeAnnealingACO(iACO):
                     optimal_counter = 0
                     temp = 1.0
                 self.solution_flag = False
-                self.view.display_SA(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix, self._view_local_points)
+                if self.display:
+                    self.view.display_SA(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix, self._view_local_points)
 
             count += 1
-            if count > 10000:
+            if count > self.max_count:
                 break
             if count % 1000 == 0:
                 print(f'Iteration {count} complete.')
@@ -356,7 +364,8 @@ class CollaborativeAnnealingACO(iACO):
         # calculate path from start to finish
         #paths = reconstruct_paths()
         #return paths
-        return self._optimal_path, None
+        optimal_path_coords = [node.location for node in self._optimal_path]
+        return optimal_path_coords, None
     
 class ACOWithMomentumAndVisionUsingDijkstraAlgorithm(iACO):
     def normalize_probs(self, probabilities):
@@ -471,10 +480,11 @@ class ACOWithMomentumAndVisionUsingDijkstraAlgorithm(iACO):
 
             if count % 10 == 0 or self.solution_flag:
                 self.solution_flag = False
-                self.view.display(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix)
+                if self.display:
+                    self.view.display(self._gridworld, self._optimal_path, self._pheromone_matrix, self._cost_matrix)
 
             count += 1
-            if count > 4000:
+            if count > self.max_count:
                 break
 
         print(f'Solution found in {count} iterations.')
@@ -483,7 +493,8 @@ class ACOWithMomentumAndVisionUsingDijkstraAlgorithm(iACO):
         # calculate path from start to finish
         #paths = reconstruct_paths()
         #return paths
-        return self._optimal_path, None
+        optimal_path_coords = [node.location for node in self._optimal_path]
+        return optimal_path_coords, None
     
 class RubberBallACO(iACO):
     def __init__(self, gridworld, alpha, beta, gamma, delta, zeta, rho, max_count=5000, display=True) -> None:
@@ -793,16 +804,17 @@ class SpittingAnts(BaseACO):
                 self._pheromone_matrix[self._pheromone_matrix < 1] = 1.0
                 if count % 10 == 0 or self.solution_flag:
                     self.solution_flag = False
-                self.view.display(
-                    self._gridworld,
-                    self._optimal_path,
-                    self._pheromone_matrix,
-                    self._cost_matrix,
-                )
+                if self.display:
+                    self.view.display(
+                        self._gridworld,
+                        self._optimal_path,
+                        self._pheromone_matrix,
+                        self._cost_matrix,
+                    )
                     # self.view.display_ants(self._gridworld)
 
                 count += 1
-                if count > 10000:
+                if count > self.max_count:
                     break
         except KeyboardInterrupt:
             pass
@@ -814,4 +826,5 @@ class SpittingAnts(BaseACO):
         else:
             print(f"No solution found in {count} iterations.")
 
-        return self._optimal_path, None
+        optimal_path_coords = [node.location for node in self._optimal_path]
+        return optimal_path_coords, None
