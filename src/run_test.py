@@ -96,12 +96,12 @@ def post_processing(file_path_json, file_path_csv):
 if __name__ == '__main__':
     file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_BaseACO.json'
     file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_BaseACO.csv'
-    #run(file_path_json, file_path_csv, Agent, BaseACO)
-    #post_processing(file_path_json, file_path_csv)
+    run(file_path_json, file_path_csv, Agent, BaseACO)
+    post_processing(file_path_json, file_path_csv)
     file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_CollaborativeAnnealing.json'
     file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_CollaborativeAnnealing.csv'
-    #run(file_path_json, file_path_csv, Agent, CollaborativeAnnealingACO)
-    #post_processing(file_path_json, file_path_csv)
+    run(file_path_json, file_path_csv, Agent, CollaborativeAnnealingACO)
+    post_processing(file_path_json, file_path_csv)
     file_path_json = 'C:/Users/laure/Desktop/git/radioactive-goose/src/results_MomentumD.json'
     file_path_csv = 'C:/Users/laure/Desktop/git/radioactive-goose/src/stats_MomentumD.csv'
     run(file_path_json, file_path_csv, Agent, ACOWithMomentumAndVisionUsingDijkstraAlgorithm)

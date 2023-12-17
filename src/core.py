@@ -30,7 +30,7 @@ def run():
     delta = 0.0           # controls the importance of exploratory pheromones
     rho = 0.0000001       # evaporation rate
 
-    search = Search(BaseACO(gridworld, alpha, beta, gamma, delta, zeta, rho, display=True)) # CHANGE ALGO HERE
+    search = Search(SpittingAnts(gridworld, alpha, beta, gamma, delta, zeta, rho, display=True)) # CHANGE ALGO HERE
 
     # Run simulation
 
