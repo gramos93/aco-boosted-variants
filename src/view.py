@@ -9,8 +9,8 @@ class View:
             3: [0, 82, 33], # trees
             4: [161, 120, 32],  # dirt
             5: [0, 0, 255], # target
-            6: [255, 140, 0], # hard bostacle (fire)
-            7: [0, 0, 255], # solution_path
+            7: [255, 140, 0], # hard bostacle (fire)
+            8: [0, 0, 255], # solution_path
         }
 
     def __enter__(self):
@@ -29,7 +29,7 @@ class View:
                 image[i, j] = self.color_map[grid[i, j]]
 
         for node in optimal_path:
-            image[node.i, node.j] = self.color_map[7]
+            image[node.i, node.j] = self.color_map[8]
 
         for agent in agents:
             path = agent.get_path()
@@ -72,7 +72,7 @@ class View:
                 self.image[i, j] = self.color_map[grid[i, j]]
 
         for node in optimal_path:
-            self.image[node.i, node.j] = self.color_map[7]
+            self.image[node.i, node.j] = self.color_map[8]
 
         for agent in agents:
             path = agent.get_path()

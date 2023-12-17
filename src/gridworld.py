@@ -16,7 +16,7 @@ class GridWorld:
             'trees': 3,
             'dirt': 4,
             'target': 5,
-            'hard_obstacle': 6,
+            'hard_obstacle': 7,
         }
         self.cost_map = {
             1: 1,
@@ -24,7 +24,7 @@ class GridWorld:
             3: 5,
             4: 2,
             5: 1,
-            6: -1
+            7: -1
         }
         self.agents = []
         self.grid = self.initialize_world()
