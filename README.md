@@ -20,7 +20,7 @@ To install requirements:
 pip install numpy
 ```
 
-## Training
+## Simulation
 
 To start the model run this command:
 
